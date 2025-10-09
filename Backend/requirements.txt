@@ -1,0 +1,23 @@
+# Computation and ML
+numpy>=1.24                
+scikit-learn>=1.3           
+scipy>=1.10                 
+
+# Plots
+pandas>=2.0                 
+matplotlib>=3.7             
+seaborn>=0.13              
+
+# Jupyter kernel support for notebooks
+ipykernel>=6.0
+
+# SMOTE oversampling for class imbalance
+imbalanced-learn
+
+# Backend hosting
+fastapi>=0.110             
+uvicorn[standard]>=0.24     
+joblib>=1.3                 
+
+# HTTP client for integrations/tests
+requests>=2.31              

@@ -1,17 +1,33 @@
+# Backend/utils/predict.py
 from typing import List, Optional, Tuple
 import numpy as np
 
+def run_prediction(model, instances: List[List[float]]) -> Tuple[List[int], Optional[List[List[float]]]]:
+	"""
+    Run prediction and return:
+      - preds: list[int] (class indices)
+      - proba: Optional[List[List[float]]] (shape: n_samples x n_classes) when predict_proba exists
 
-def run_prediction(model, instances: List[List[float]]) -> Tuple[List[int], Optional[List[float]]]:
+    This function:
+      - converts instances to a numpy array
+      - if model expects a specific number of features, it DOES NOT try to pad/trim here.
+        (If desired, padding can be added earlier in the pipeline.)
+      - returns full predict_proba matrix (converted to python lists) when available.
+    """
 	X = np.array(instances, dtype=float)
 	preds = model.predict(X).tolist()
+
 	proba = None
-	if hasattr(model, 'predict_proba'):
-		proba_vals = model.predict_proba(X)
-		if isinstance(proba_vals, np.ndarray) and proba_vals.ndim == 2 and proba_vals.shape[1] >= 2:
-			proba = proba_vals[:, 1].tolist()
-		elif isinstance(proba_vals, np.ndarray) and proba_vals.ndim == 1:
-			proba = proba_vals.tolist()
+	if hasattr(model, "predict_proba"):
+		try:
+			proba_vals = model.predict_proba(X)
+			# For multiclass sklearn models, predict_proba returns shape (n_samples, n_classes)
+			if isinstance(proba_vals, np.ndarray):
+				# Convert to regular Python nested lists for JSON serialization
+				proba = proba_vals.tolist()
+		except Exception as e:
+			# If something goes wrong computing predict_proba, don't crash the whole API.
+			print(f"[WARN] predict_proba failed: {e}")
+			proba = None
+
 	return preds, proba
-
-

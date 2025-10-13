@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from utils.model_io import list_models, load_model
 from config import get_model_dir
 from utils.predict import run_prediction
+import pickle
+import os
 
 
 class PredictRequest(BaseModel):
@@ -31,7 +33,7 @@ class PredictRequest(BaseModel):
 class PredictResponse(BaseModel):
     model: str
     predictions: List[int]
-    probabilities: Optional[List[float]] = None
+    probabilities: Optional[List[List[float]]] = None
 
 
 app = FastAPI(title="Model Inference API", version="1.0.0")
@@ -76,10 +78,7 @@ def predict(req: PredictRequest):
     preds, proba = run_prediction(model, req.instances)
     return PredictResponse(model=req.model, predictions=preds, probabilities=proba)
 
-
 if __name__ == "__main__":
     import uvicorn
     os.makedirs(get_model_dir(), exist_ok=True)
     uvicorn.run("serve:app", host="0.0.0.0", port=8000, reload=True)
-
-

@@ -21,12 +21,9 @@ def run_prediction(model, instances: List[List[float]]) -> Tuple[List[int], Opti
 	if hasattr(model, "predict_proba"):
 		try:
 			proba_vals = model.predict_proba(X)
-			# For multiclass sklearn models, predict_proba returns shape (n_samples, n_classes)
 			if isinstance(proba_vals, np.ndarray):
-				# Convert to regular Python nested lists for JSON serialization
 				proba = proba_vals.tolist()
 		except Exception as e:
-			# If something goes wrong computing predict_proba, don't crash the whole API.
 			print(f"[WARN] predict_proba failed: {e}")
 			proba = None
 

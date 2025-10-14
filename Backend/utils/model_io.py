@@ -3,7 +3,7 @@ from typing import Dict
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
-import joblib  # type: ignore
+
 
 def save_models(models: Dict[str, object], out_dir: str = "cache/models") -> None:
     for name, model in models.items():
@@ -29,7 +29,7 @@ def load_models(out_dir: str = "cache/models") -> Dict[str, object]:
     
     for fname in os.listdir(out_dir):
         if fname.endswith(".joblib"):
-            name = fname[:-7]  # Remove .joblib extension
+            name = fname[:-7]  
             try:
                 models[name] = load_model(name, out_dir)
             except Exception as e:

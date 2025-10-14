@@ -56,7 +56,8 @@ const ContentIsland = () => {
                         mb: 3,
                     }}
                 >
-                    Explore our guides for testing the functionality of our Supervised, Unsupervised and Deep Learning models. View interactive visualisations. Upload your own data to test our models.
+                    Explore our guides for testing the functionality of our Supervised, Unsupervised and Deep Learning models. 
+                    View interactive visualisations. Upload your own data to test our models.
                 </Typography>
             </Box>
 

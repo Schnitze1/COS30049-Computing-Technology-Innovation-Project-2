@@ -137,7 +137,6 @@ const Footer = () => {
                     ))}
                 </Grid>
             </Grid>
-
             <Divider
                 sx={{
                     my: 4,

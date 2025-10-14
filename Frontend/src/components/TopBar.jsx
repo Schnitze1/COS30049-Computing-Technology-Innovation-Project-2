@@ -15,6 +15,7 @@ import {
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import { Link as RouterLink } from "react-router-dom";
 
 const TopBar = ({ darkMode }) => {
     const theme = useTheme();
@@ -52,7 +53,6 @@ const TopBar = ({ darkMode }) => {
         setMobileMenuOpen((prev) => !prev);
     };
 
-    // Button styles
     const navButtonBase = {
         fontFamily: "Consolas, monospace",
         fontSize: "17px",
@@ -143,7 +143,6 @@ const TopBar = ({ darkMode }) => {
                         px: { xs: 3, md: 8 },
                     }}
                 >
-                    {/* 🧠 Logo + Text */}
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Link href="/" sx={{ display: 'flex', alignItems: 'center' }}>
                             <img
@@ -206,7 +205,7 @@ const TopBar = ({ darkMode }) => {
                                 Learn
                             </Button>
                             <Menu {...commonMenuProps("learn")}>
-                                <MenuItem component="a" href="/about" onClick={immediateClose}>About</MenuItem>
+                                <MenuItem component={RouterLink} to="/about" onClick={immediateClose}>About</MenuItem>
                                 <Divider sx={{ my: 1 }} />
                                 <MenuItem component="a" href="https://github.com/Schnitze1/COS30049-Computing-Technology-Innovation-Project-2/blob/main/README.md" target="_blank" rel="noopener noreferrer" onClick={immediateClose}>
                                     Readme.md

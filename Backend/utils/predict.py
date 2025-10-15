@@ -1,4 +1,3 @@
-# Backend/utils/predict.py
 from typing import List, Optional, Tuple
 import numpy as np
 

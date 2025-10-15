@@ -3,7 +3,7 @@ from typing import Dict
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
-
+import joblib  # type: ignore
 
 def save_models(models: Dict[str, object], out_dir: str = "cache/models") -> None:
     for name, model in models.items():

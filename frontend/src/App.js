@@ -12,7 +12,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Supervised from "./pages/Supervised";
 import Unsupervised from "./pages/Unsupervised";
-import Deep_Learning from "./pages/Deep_Learning";
+import DeepLearning from "./pages/Deep_Learning";
 import Testing from "./pages/Testing";
 
 function App() {
@@ -50,7 +50,7 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/testing/supervised" element={<Supervised />} />
                 <Route path="/testing/unsupervised" element={<Unsupervised />} />
-                <Route path="/testing/deep-learning" element={<Deep_Learning />} />
+                <Route path="/testing/deep-learning" element={<DeepLearning />} />
                 <Route path="/testing" element={<Testing />} />
             </Routes>
             </Box>

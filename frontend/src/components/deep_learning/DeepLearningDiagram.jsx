@@ -33,9 +33,8 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   }, [modelName]);
 
   useEffect(() => {
-    if (isDataLoaded) {
-      drawDiagram(activeClass);
-    }
+    if (!isDataLoaded) return;
+    drawDiagram(activeClass);
   }, [activeClass, isDark, isDataLoaded]);
 
   const buildNetwork = (data) => {

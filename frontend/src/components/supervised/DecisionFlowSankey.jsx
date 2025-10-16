@@ -15,8 +15,6 @@ const DecisionFlowSankey = ({
 
   useEffect(() => {
     if (!probabilities || !classLabels || !featureImportances) return;
-    let safeProbabilities = probabilities || [];
-    let safeClassLabels = classLabels || [];
     const svgWidth = 900;
     const svgHeight = 500;
     const svg = d3

@@ -209,7 +209,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
 
   return (
     <div>
-      <svg ref={svgRef} style={{ display: "block", margin: "0 auto", background: isDark ? "#222" : "#EFF0EB", borderRadius: "10px" }}/>
+      <svg ref={svgRef} style={{ display: "block", margin: "0 auto", background: isDark ? "#222" : "#EAE6DE", borderRadius: "10px" }}/>
       <div style={{ marginTop: "40px", display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center" }}>
         {CLASS_LABELS.map((label, idx) => (
           <Button key={label} 

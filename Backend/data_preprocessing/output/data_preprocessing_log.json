@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-01T23:25:18.769579",
+  "timestamp": "2025-10-17T17:45:02.823360",
   "dataset_info": {
     "original_shape": [
       5301,
@@ -61,85 +61,85 @@
     ]
   },
   "feature_selection": {
-    "total_features_analyzed": 38,
+    "total_features_analyzed": 43,
     "selected_features_count": 15,
     "top_features": [
-      "num__Flow Duration",
-      "num__FWD Init Win Bytes",
-      "num__Fwd Packet Length Max",
-      "num__Flow IAT Mean",
-      "num__Flow Bytes/s",
-      "num__Fwd Seg Size Min",
-      "num__Flow Packets/s",
-      "num__Packet Length Std",
-      "num__Flow IAT Std",
-      "num__Fwd Header Length",
-      "num__Total Fwd Packet",
-      "num__Bwd Packet Length Mean",
-      "num__Bwd IAT Total",
-      "num__Total Length of Bwd Packet",
-      "num__Total Bwd packets"
+      "Fwd Packet Length Max",
+      "Flow Duration",
+      "FWD Init Win Bytes",
+      "Flow Bytes/s",
+      "Flow IAT Mean",
+      "Fwd Seg Size Min",
+      "Fwd Header Length",
+      "Flow Packets/s",
+      "Flow IAT Std",
+      "Total Fwd Packet",
+      "Total Length of Bwd Packet",
+      "Total Bwd packets",
+      "Packet Length Std",
+      "Bwd Packet Length Mean",
+      "Protocol"
     ],
     "feature_importance_scores": [
       {
-        "feature_name": "num__Flow Duration",
-        "importance": 0.07483832677944663
+        "feature_name": "Fwd Packet Length Max",
+        "importance": 0.07196077811657203
       },
       {
-        "feature_name": "num__FWD Init Win Bytes",
-        "importance": 0.07074996918659524
+        "feature_name": "Flow Duration",
+        "importance": 0.07017706242580245
       },
       {
-        "feature_name": "num__Fwd Packet Length Max",
-        "importance": 0.07070200702892722
+        "feature_name": "FWD Init Win Bytes",
+        "importance": 0.06219721917478155
       },
       {
-        "feature_name": "num__Flow IAT Mean",
-        "importance": 0.05851906912520983
+        "feature_name": "Flow Bytes/s",
+        "importance": 0.06094460971537577
       },
       {
-        "feature_name": "num__Flow Bytes/s",
-        "importance": 0.05814271349283382
+        "feature_name": "Flow IAT Mean",
+        "importance": 0.05572878478066638
       },
       {
-        "feature_name": "num__Fwd Seg Size Min",
-        "importance": 0.04827087425319668
+        "feature_name": "Fwd Seg Size Min",
+        "importance": 0.04783143891416783
       },
       {
-        "feature_name": "num__Flow Packets/s",
-        "importance": 0.047209769465032705
+        "feature_name": "Fwd Header Length",
+        "importance": 0.046771640599285035
       },
       {
-        "feature_name": "num__Packet Length Std",
-        "importance": 0.04612083297972748
+        "feature_name": "Flow Packets/s",
+        "importance": 0.04545632784380963
       },
       {
-        "feature_name": "num__Flow IAT Std",
-        "importance": 0.04528265895899977
+        "feature_name": "Flow IAT Std",
+        "importance": 0.04373178422796904
       },
       {
-        "feature_name": "num__Fwd Header Length",
-        "importance": 0.04015585867298773
+        "feature_name": "Total Fwd Packet",
+        "importance": 0.042493761356278074
       },
       {
-        "feature_name": "num__Total Fwd Packet",
-        "importance": 0.0348552281735298
+        "feature_name": "Total Length of Bwd Packet",
+        "importance": 0.0420442617956046
       },
       {
-        "feature_name": "num__Bwd Packet Length Mean",
-        "importance": 0.03363773819005238
+        "feature_name": "Total Bwd packets",
+        "importance": 0.03514775017946051
       },
       {
-        "feature_name": "num__Bwd IAT Total",
-        "importance": 0.032554155808002846
+        "feature_name": "Packet Length Std",
+        "importance": 0.034393268927969414
       },
       {
-        "feature_name": "num__Total Length of Bwd Packet",
-        "importance": 0.031526023264536074
+        "feature_name": "Bwd Packet Length Mean",
+        "importance": 0.03285199939452433
       },
       {
-        "feature_name": "num__Total Bwd packets",
-        "importance": 0.031315903197347325
+        "feature_name": "Protocol",
+        "importance": 0.030288476665326594
       }
     ]
   },

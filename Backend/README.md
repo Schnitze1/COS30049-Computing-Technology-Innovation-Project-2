@@ -29,33 +29,29 @@ cd COS30049-Computing-Technology-Innovation-Project-2/Backend
 
 # Create virtual environment
 python -m venv .venv
-
-# Activate (Windows)
-.venv\Scripts\activate
-
-# Install dependencies
+.\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
-### 2. Data Preprocessing
-1. Open notebook: `data_preprocessing/data_cleaning.ipynb`
-2. Set kernel to the current `.venv` interpreter
-3. Run all cells to process raw network traffic data
-4. This generates `processed_data.npz` and `feature_metadata.pkl`
 
-### 3. Train and Evaluate Models
+### 2) Preprocess data (generate 15-feature dataset and scaler)
 
 ```bash
-# Train models and generate comprehensive evaluation reports
+python data_preprocessing\data_cleaning.py
+```
+
+This writes processed artifacts into `data_preprocessing/output/`:
+- `processed_data.npz` (train/test with 15 features)
+- `feature_metadata.pkl` (feature names, label encoder, 15-feature scaler)
+
+### 3) Train and evaluate models
+
+```bash
 python main.py
 ```
 
-### 4. Start API Server (Optional)
+### 4) Start the inference API (FastAPI)
 
 ```bash
-# Start FastAPI server for real-time predictions
-python serve.py
-
-# Or using uvicorn directly
 uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
 ```
 
@@ -170,18 +166,17 @@ python serve.py
 
 ### Make Predictions
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/predict" \
+curl -X POST "http://127.0.0.1:8000/predict/{model}" \
      -H "Content-Type: application/json" \
      -d '{
-       "model": "random_forest",
        "instances": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
      }'
 ```
 
 ### Available Endpoints
-- `GET /api/v1/health`: Health check
-- `GET /api/v1/models`: List available models
-- `POST /api/v1/predict`: Make predictions
+- `GET /health`: Health check
+- `GET /models`: List available models
+- `POST /predict`: Make predictions
 - `GET /docs`: Interactive API documentation
 
 ## Requirements

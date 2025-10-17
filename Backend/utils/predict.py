@@ -14,7 +14,13 @@ def run_prediction(model, instances: List[List[float]]) -> Tuple[List[int], Opti
       - returns full predict_proba matrix (converted to python lists) when available.
     """
 	X = np.array(instances, dtype=float)
-	preds = model.predict(X).tolist()
+	
+	# Use fit_predict for DBSCAN since it doesn't have a predict method
+	if hasattr(model, '__class__') and 'DBSCAN' in str(type(model)):
+		preds = model.fit_predict(X).tolist()
+	else:
+		# Standard predict for other models
+		preds = model.predict(X).tolist()
 
 	proba = None
 	if hasattr(model, "predict_proba"):

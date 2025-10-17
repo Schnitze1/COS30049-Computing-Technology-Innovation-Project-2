@@ -111,6 +111,9 @@ y = le.fit_transform(y)
 # Compute train and test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
 
+# Save original column names for later use in API
+X_train_raw_columns = X_train.columns.tolist()
+
 # Identifying Numerical and Categorical columns
 numerical_cols = X_train.select_dtypes(include=[np.number]).columns.to_list()
 categorical_cols = X_train.select_dtypes(include=[object]).columns.to_list()
@@ -135,34 +138,38 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Apply preprocessor to train and test data
-preprocessor.fit(X_train)
-X_train = preprocessor.transform(X_train)
-X_test = preprocessor.transform(X_test)
-
-feat_names = preprocessor.get_feature_names_out()
-
 # =========================================================== #
-# Select top features importance using Random Forest
+# Select top features importance using Random Forest on RAW data
 from sklearn.ensemble import RandomForestClassifier
 rf_selector = RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)
 rf_selector.fit(X_train, y_train)
 
+# Get feature importance from raw data
 importance_df = (
-    pd.DataFrame({"feature_name": feat_names, "importance": rf_selector.feature_importances_})
+    pd.DataFrame({"feature_name": X_train.columns, "importance": rf_selector.feature_importances_})
         .sort_values("importance", ascending=False)
         .reset_index(drop=True)
 )
 
-top_feature_indices = importance_df.index[:15].to_list()            # transformed-space indices
-top_feature_names   = importance_df["feature_name"].head(15).to_list()
+# correct indices: map names back to ORIGINAL X_train columns
+original_indices = [list(X_train.columns).index(fn)
+                    for fn in importance_df["feature_name"].head(15)]
+top_feature_indices = original_indices
+top_feature_names = importance_df["feature_name"].head(15).to_list()
 
 # Save feature importance analysis to CSV
 importance_df.to_csv(f'{output_dir}/feature_importance_analysis.csv', index=False)
 
-# Select features using indices (works with NumPy arrays)
-X_train = X_train[:, top_feature_indices]
-X_test = X_test[:, top_feature_indices]
+# Select the top 15 features from RAW data
+X_train_selected = X_train.iloc[:, top_feature_indices]
+X_test_selected = X_test.iloc[:, top_feature_indices]
+
+# Create a simple scaler for the 15 selected features
+# This scaler will work on the raw values of these 15 features
+from sklearn.preprocessing import StandardScaler
+selected_features_scaler = StandardScaler()
+X_train = selected_features_scaler.fit_transform(X_train_selected)
+X_test = selected_features_scaler.transform(X_test_selected)
 
 # ---------------------------------------------------------- #
 # Create feature importance visualization
@@ -282,7 +289,8 @@ log_data = {
         'total_features_analyzed': int(len(importance_df)),
         'selected_features_count': int(len(top_feature_names)),
         'top_features': top_feature_names,
-        'feature_importance_scores': importance_df.head(15).to_dict('records')
+        'feature_importance_scores': importance_df.head(15).to_dict('records'),
+        'top_feature_indices': top_feature_indices,  # Indices of selected features in raw data
     },
     'class_distribution': {
         'before_smote': {str(label): int(count) for label, count in zip(le.classes_, label_counts)},
@@ -322,12 +330,13 @@ np.savez_compressed(
     y_test=y_test
 )
 
-# Save metadata (including label encoder, feature names, and preprocessor)
+# Save metadata (including label encoder, feature names, and scaler for 15 features)
 with open(f'{output_dir}/feature_metadata.pkl', 'wb') as f:
     pickle.dump({
         'label_encoder': le,  # LabelEncoder
-        'feature_names': top_feature_names,  # Top 15 features (optimized)
+        'feature_names': top_feature_names,  # Top 15 original feature names
         'target_variable': 'Traffic Type',
+        'selected_features_scaler': selected_features_scaler,  # Scaler for the 15 selected features
     }, f)
 
 print(f"\nData saved successfully! See log and output at {output_dir}")

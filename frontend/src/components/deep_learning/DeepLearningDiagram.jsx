@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as d3 from "d3";
 import Button from "@mui/material/Button";
 
@@ -10,12 +10,12 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   const [activeClass, setActiveClass] = useState(0);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  const layerColors = ["#4285F4", "#34A853", "#EA4335"]; 
+  const layerColors = useMemo(() => ["#4285F4", "#34A853", "#EA4335"], []); 
 
-  const CLASS_LABELS = [
+  const CLASS_LABELS = useMemo(() => [
     "Audio", "Background", "Bruteforce", "DoS",
     "Information Gathering", "Mirai", "Text", "Video",
-  ];
+  ], []);
 
   const buttonStyles = {
     textTransform: "none", fontWeight: 600, borderRadius: "6px",
@@ -23,7 +23,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   };
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/api/v1/model-architecture/${modelName}?top_k=2`)
+    fetch(`http://127.0.0.1:8000/model-architecture/${modelName}?top_k=2`)
       .then((res) => res.json())
       .then((data) => {
         buildNetwork(data);
@@ -31,11 +31,6 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
       })
       .catch((err) => console.error(err));
   }, [modelName]);
-
-  useEffect(() => {
-    if (!isDataLoaded) return;
-    drawDiagram(activeClass);
-  }, [activeClass, isDark, isDataLoaded]);
 
   const buildNetwork = (data) => {
     const width = 1000, height = 600;
@@ -68,7 +63,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
     edgesRef.current = edges;
   };
 
-  const drawDiagram = (outputNeuronIdx) => {
+  const drawDiagram = useCallback((outputNeuronIdx) => {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -81,7 +76,8 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
     const maxLayer = Math.max(...allEdges.map((e) => e.layer));
 
     for (let l = maxLayer; l >= 0; l--) {
-      const matches = allEdges.filter((e) => e.layer === l && currentTargets.includes(e.tgt.index));
+      const currentTargetsCopy = [...currentTargets]; // Create a copy to avoid unsafe reference
+      const matches = allEdges.filter((e) => e.layer === l && currentTargetsCopy.includes(e.tgt.index));
       if (matches.length === 0) continue;
       focusedEdges.push(...matches);
       currentTargets = [...new Set(matches.map((e) => e.src.index))];
@@ -204,7 +200,12 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
             .attr("text-anchor", "middle").attr("font-size", 16)
             .attr("fill", isDark ? "#F0C966" : "#000").text(CLASS_LABELS[activeClass]);
     }
-  };
+  }, [isDark, activeClass, CLASS_LABELS, layerColors]);
+
+  useEffect(() => {
+    if (!isDataLoaded) return;
+    drawDiagram(activeClass);
+  }, [activeClass, isDark, isDataLoaded, drawDiagram]);
 
   return (
     <div>

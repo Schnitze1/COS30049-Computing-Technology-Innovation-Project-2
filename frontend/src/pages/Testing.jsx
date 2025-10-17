@@ -11,6 +11,7 @@ const Testing = () => {
   const [selectedModel, setSelectedModel] = useState('random_forest');
   const [selectedSample, setSelectedSample] = useState('Audio');
   const [predictions, setPredictions] = useState(null);
+  const [values, setValues] = useState(SAMPLES['Audio']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -18,7 +19,6 @@ const Testing = () => {
   const handlePredict = async () => {
     setLoading(true); setError(null); setSuccess(null);
     try {
-      const values = SAMPLES[selectedSample]; // already in correct order
       const result = await predict(selectedModel, values);
       setPredictions(result);
       setSuccess('Prediction completed successfully!');
@@ -27,6 +27,19 @@ const Testing = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSampleChange = (s) => {
+    setSelectedSample(s);
+    setValues(SAMPLES[s]);
+  };
+
+  const handleValueChange = (index, newVal) => {
+    setValues((prev)=> {
+      const next = [...prev];
+      next[index] = newVal === '' ? '' : Number(newVal);
+      return next;
+    });
   };
 
   return (
@@ -38,8 +51,8 @@ const Testing = () => {
             <Typography variant="h6" gutterBottom sx={{ mb:3 }}>Model Playground</Typography>
             <Stack spacing={3} sx={{ flex:1 }}>
               <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-              <SampleSelector value={selectedSample} onChange={setSelectedSample} />
-              <FeatureGrid sampleType={selectedSample} />
+              <SampleSelector value={selectedSample} onChange={handleSampleChange} />
+              <FeatureGrid values={values} onChange={handleValueChange} />
               <Button variant="contained" onClick={handlePredict} disabled={loading} fullWidth size="large"
                 sx={{ bgcolor:'success.main', '&:hover':{bgcolor:'success.dark'}, py:1.5 }}>
                 {loading ? <CircularProgress size={24} color="inherit" /> : 'Predict'}

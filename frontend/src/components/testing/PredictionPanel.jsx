@@ -3,15 +3,25 @@ import { SAMPLES } from '../../constants/model_playground';
 
 const trafficTypes = Object.keys(SAMPLES);
 const nameOf = (idx)=> trafficTypes[idx] || `Unknown (${idx})`;
+const isBenign = (name)=> (name === 'Audio' || name === 'Background' || name === 'Text' || name === 'Video');
 
 export default function PredictionPanel({ predictions }) {
   if (!predictions) return null;
+  const predIdx = predictions.predictions?.[0];
+  const predName = nameOf(predIdx);
+  const probs = predictions.probabilities?.[0] || [];
+  const confidence = Number.isFinite(probs[predIdx]) ? (probs[predIdx] * 100) : null;
+  const label = isBenign(predName) ? 'Benign' : 'Malicious';
   return (
     <Box sx={{ flex:1 }}>
       <Box sx={{ mb:3 }}>
         <Typography variant="h6" gutterBottom>
-          Predicted: <span style={{ color:'#4caf50' }}>{nameOf(predictions.predictions[0])}</span> ({predictions.predictions[0]})
+          Predicted: <span style={{ color:'#4caf50' }}>{predName}</span> ({predIdx})
         </Typography>
+        <Box sx={{ display:'flex', gap:1, alignItems:'center' }}>
+          <Chip label={`Type: ${label}`} color={label==='Benign' ? 'success' : 'error'} variant="outlined" />
+          {confidence !== null && <Chip label={`Confidence: ${confidence.toFixed(1)}%`} variant="outlined" />}
+        </Box>
       </Box>
       <Divider sx={{ my:2 }} />
       <Grid container spacing={2}>

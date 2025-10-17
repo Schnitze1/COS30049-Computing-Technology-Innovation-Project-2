@@ -16,7 +16,7 @@ export default function PredictionPanel({ predictions }) {
     <Box sx={{ flex:1 }}>
       <Box sx={{ mb:3 }}>
         <Typography variant="h6" gutterBottom>
-          Predicted: <span style={{ color:'#4caf50' }}>{predName}</span> ({predIdx})
+          Predicted: <span style={{ color:'#4caf50' }}>{predName}</span>
         </Typography>
         <Box sx={{ display:'flex', gap:1, alignItems:'center' }}>
           <Chip label={`Type: ${label}`} color={label==='Benign' ? 'success' : 'error'} variant="outlined" />

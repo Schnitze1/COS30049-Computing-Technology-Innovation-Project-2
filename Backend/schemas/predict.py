@@ -1,13 +1,21 @@
+"""Pydantic models for prediction API requests and responses."""
+
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
+
 class PredictRequest(BaseModel):
-	input_values: List[List[float]]
+    """Request model for prediction endpoint."""
+    input_values: List[List[float]]
+
 
 class PredictResponse(BaseModel):
-	model: str
-	predictions: List[int]
-	probabilities: Optional[List[List[float]]] = None
+    """Response model for prediction endpoint."""
+    model: str
+    predictions: List[int]
+    probabilities: Optional[List[List[float]]] = None
+
 
 class ModelsResponse(BaseModel):
-	models: List[Dict[str, Any]]
+    """Response model for models listing endpoint."""
+    models: List[Dict[str, Any]]

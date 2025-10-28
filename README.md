@@ -38,11 +38,25 @@ npm start
 Front end URL: `http://127.0.0.1:3000`.
 The frontend expects the backend at `http://127.0.0.1:8000`.
 
-### Testing (backend):
-```
+### Testing
+
+**Backend Testing:**
+```bash
 cd Backend
 pytest -q
 ```
+
+**Test Coverage:**
+- **Unit Tests**: Input validation (`test_validators.py`)
+- **API Tests**: All endpoints with TestClient (`test_api.py`)
+- **Integration Tests**: End-to-end prediction workflow
+- **Error Handling**: 422, 404, 400, 500 status codes
+- **Data Validation**: Non-negative inputs, 15-feature requirement
+
+**Test Files:**
+- `tests/conftest.py` - Pytest configuration and fixtures
+- `tests/test_validators.py` - Unit tests for input validation
+- `tests/test_api.py` - API endpoint integration tests
 
 ## Architecture
 

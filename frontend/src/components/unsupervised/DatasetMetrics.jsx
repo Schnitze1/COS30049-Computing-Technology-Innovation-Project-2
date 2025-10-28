@@ -6,6 +6,7 @@ import {
   Grid,
   CircularProgress,
 } from "@mui/material";
+import { compareDataset } from "../../api/predict";
 const AnimatedStat = ({ value, label, duration = 800 }) => {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -104,16 +105,7 @@ const DatasetMetrics = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'}/compare-dataset`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`API Error: ${errText}`);
-      }
-      const result = await res.json();
+      const result = await compareDataset(file);
       setNumRecords(result.records_uploaded);
       setNumFeatures(result.features_uploaded);
       setFeatureOverlap(result.matching_features);

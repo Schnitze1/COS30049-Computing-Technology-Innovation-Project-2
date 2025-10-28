@@ -13,6 +13,27 @@ import Unsupervised from "./pages/Unsupervised";
 import DeepLearning from "./pages/Deep_Learning";
 import Testing from "./pages/Testing";
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    // Could integrate with Sentry/Datadog here
+    // eslint-disable-next-line no-console
+    console.error("React error boundary caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(false);
 
@@ -43,14 +64,16 @@ function App() {
           <TopBar darkMode={darkMode} />
 
           <Box sx={{ flex: 1, mt: "80px" }}>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/testing/supervised" element={<Supervised />} />
-                <Route path="/testing/unsupervised" element={<Unsupervised />} />
-                <Route path="/testing/deep-learning" element={<DeepLearning />} />
-                <Route path="/testing" element={<Testing />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/testing/supervised" element={<Supervised />} />
+                  <Route path="/testing/unsupervised" element={<Unsupervised />} />
+                  <Route path="/testing/deep-learning" element={<DeepLearning />} />
+                  <Route path="/testing" element={<Testing />} />
+              </Routes>
+            </ErrorBoundary>
             </Box>
           <Footer />
           <FloatingDarkModeButton toggleDarkMode={handleDarkModeToggle} />

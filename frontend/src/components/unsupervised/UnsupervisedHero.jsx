@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 import LiveHistogram from './LiveHistogram';
 import DatasetMetrics from './DatasetMetrics';
 import ScrollProgressBar from '../misc/ScrollProgressBar';
+import { predict } from '../../api/predict';
 
 const UnsupervisedHero = () => {
     const theme = useTheme();
@@ -15,15 +16,7 @@ const UnsupervisedHero = () => {
     useEffect(() => {
         const interval = setInterval(async () => {
             try {
-                const payload = { model: 'dbscan', instances: [buildFeatureVector()] };
-                const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'}/predict/dbscan`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                await res.json();
+                await predict('dbscan', buildFeatureVector());
                 const isMalicious = Math.random() < 0.2;
                 const totalBytes = Math.random() * 8000 + 1000;
                 let normalConfidence, maliciousConfidence;

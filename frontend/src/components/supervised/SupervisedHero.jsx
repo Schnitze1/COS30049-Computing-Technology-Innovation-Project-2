@@ -14,6 +14,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DecisionFlowSankey from "./DecisionFlowSnakey";
 import PieChart from "./PieChart";
 import ScrollProgressBar from "../misc/ScrollProgressBar";
+import { predict } from "../../api/predict";
 
 const SIMPLE_CLASS_LABELS = ["Normal", "Malicious"];
 const ADVANCED_CLASS_LABELS = [
@@ -63,18 +64,7 @@ const SupervisedHero = () => {
     setIsLoading(true);
 
     const handler = setTimeout(() => {
-      fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "random_forest",
-          instances: [payload],
-        }),
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error(`Server error: ${res.status}`);
-          return res.json();
-        })
+      predict("random_forest", payload)
         .then((data) => {
           const rawProbs =
             data?.probabilities?.[0] ?? [1, 0, 0, 0];

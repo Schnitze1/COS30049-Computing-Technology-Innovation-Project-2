@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as d3 from "d3";
 import Button from "@mui/material/Button";
+import { getModelArchitecture } from "../../api/predict";
 
 const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   const svgRef = useRef();
@@ -21,8 +22,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   };
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'}/model-architecture/${modelName}?top_k=2`)
-      .then((res) => res.json())
+    getModelArchitecture(modelName, 2)
       .then((data) => {
         buildNetwork(data);
         setIsDataLoaded(true); 

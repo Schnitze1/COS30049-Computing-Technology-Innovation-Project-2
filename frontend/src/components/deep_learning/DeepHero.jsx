@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useTheme, Box, Typography, CircularProgress, Slider, Grid, Button, Stack } from "@mui/material";
 import { ProbabilityColumnChart } from "./ProbabilityColumnChart"; 
+import { SAMPLES, FEATURE_NAMES } from "../../constants/model_playground";
+import { predict } from "../../api/predict";
 
 const simulationPresets = {
-    'DoS': [0.0, 0.000336, 0.0, 0.0, 4.7e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    'Bruteforce':  [0.85, 0.000336, 0.75, 0.165951, 0.000944, 0.001881, 7e-05, 9.3e-05, 0.643275, 0.0, 0.067669, 0.197067, 0.783383, 0.0, 0.049119],
-    'Background': [0.924297, 0.000336, 0.352941, 0.0, 4.7e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    'DoS': SAMPLES['DoS'],
+    'Bruteforce': SAMPLES['Bruteforce'],
+    'Background': SAMPLES['Background'],
 };
 
-const topFeatures = [
-    { name: 'Flow Duration', index: 0 },
-    { name: 'Fwd Packet Length Max', index: 1 },
-    { name: 'FWD Init Win Bytes', index: 2 },
-    { name: 'Flow Bytes/s', index: 3 },
-    { name: 'Flow IAT Mean', index: 4 }
+// Use names then derive indices from FEATURE_NAMES to avoid mismatches
+const topFeatureNames = [
+    'Flow Duration',
+    'Fwd Packet Length Max',
+    'FWD Init Win Bytes',
+    'Flow Bytes/s',
+    'Flow IAT Mean'
 ];
+const topFeatures = topFeatureNames.map((name) => ({ name, index: FEATURE_NAMES.indexOf(name) }));
 
 const DeepHero = () => {
     const theme = useTheme();
@@ -31,22 +35,18 @@ const DeepHero = () => {
     useEffect(() => {
         setIsLoading(true);
         const handler = setTimeout(() => {
-            fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000'}/predict`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: 'mlp', instances: [featureVector] })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.probabilities && data.probabilities.length > 0) {
-                    setProbabilities(data.probabilities[0]);
-                }
-                setIsLoading(false);
-            })
-            .catch(err => {
-                console.error("Prediction failed:", err);
-                setIsLoading(false);
-            });
+            predict('mlp', featureVector)
+                .then((data) => {
+                    if (data.probabilities && data.probabilities.length > 0) {
+                        setProbabilities(data.probabilities[0]);
+                    }
+                    setIsLoading(false);
+                })
+                .catch((err) => {
+                    // eslint-disable-next-line no-console
+                    console.error('Prediction failed:', err);
+                    setIsLoading(false);
+                });
         }, 300);
 
         return () => { clearTimeout(handler); };
@@ -118,7 +118,7 @@ const DeepHero = () => {
                                 }),
                             }}
                         >
-                           Load {presetName} Simulation
+                        Load {presetName} Sample
                         </Button>
                     ))}
                 </Stack>

@@ -2,7 +2,7 @@
  * @file SupervisedHero.jsx
  * @description The main interactive component for demonstrating the supervised
  * learning model (Random Forest). It combines feature controls, a Sankey diagram,
- * and a pie chart to visualize the model's predictions.
+ * and a pie chart to visualize the model's predictions
  */
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -246,8 +246,6 @@ export default function SupervisedHero() {
       <Box sx={{ my: 10 }}>
         <ScrollProgressBar />
       </Box>
-
-      {/* CORRECTED: Reverted to the previous working style for this container */}
       <Box>
         <Box sx={{
           padding: '16px',
@@ -255,7 +253,7 @@ export default function SupervisedHero() {
           background: isDark ? '#222' : 'transparent',
           boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.4)' : 'none',
           transition: 'background 0.3s ease-in-out',
-          display: 'inline-block' // This is the key style that was missing
+          display: 'inline-block' 
         }}>
           <PieChart isDark={isDark} />
         </Box>

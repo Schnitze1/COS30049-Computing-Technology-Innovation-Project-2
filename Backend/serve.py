@@ -2,19 +2,19 @@
 
 import os
 import time
-from fastapi import FastAPI, UploadFile, File, Request
+
+from config import get_model_dir
+from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from config import get_model_dir
-from validators.input import validate_input_values
-from services.prediction import ensure_model_exists, predict_with_preprocessing_service
-from services.model_inspect import model_architecture_service
+from schemas.predict import ModelsResponse, PredictRequest, PredictResponse
+from schemas.utilities import DatasetCompareResponse, ModelArchitectureResponse
 from services.dataset_compare import compare_dataset_service
-from schemas.predict import PredictRequest, PredictResponse, ModelsResponse
-from schemas.utilities import ModelArchitectureResponse, DatasetCompareResponse
+from services.model_inspect import model_architecture_service
+from services.prediction import ensure_model_exists, predict_with_preprocessing_service
 from utils.model_io import list_models
+from validators.input import validate_input_values
 
 # FASTAPI APP SETUP:
 app = FastAPI(title="Model Inference API", version="2.0.0")
@@ -43,14 +43,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+
 # Global Exception Handler: bind to all unhandled exceptions to catch all exceptions.
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Handle unexpected errors with consistent error format."""
     return JSONResponse(
-        status_code=500,
-        content={"message": f"An unexpected error occurred: {str(exc)}"}
+        status_code=500, content={"message": f"An unexpected error occurred: {str(exc)}"}
     )
+
 
 # Middleware for Debugging: track req and res cycles, execution time
 @app.middleware("http")
@@ -69,16 +70,23 @@ def health():
     """Health check endpoint."""
     return {"status": "ok"}
 
+
 @app.get("/models")
 def get_models():
     """Get list of available models with metadata."""
     models = list_models(out_dir=get_model_dir())
-    return ModelsResponse(models=[
-        {
-            "model_name": model_name,
-            "model_type": "supervised" if model_name in ['random_forest', 'mlp'] else "unsupervised"
-        } for model_name in models
-    ])
+    return ModelsResponse(
+        models=[
+            {
+                "model_name": model_name,
+                "model_type": (
+                    "supervised" if model_name in ["random_forest", "mlp"] else "unsupervised"
+                ),
+            }
+            for model_name in models
+        ]
+    )
+
 
 @app.post("/predict/{model_name}", response_model=PredictResponse, tags=["Inference API"])
 def predict(model_name: str, request: PredictRequest):
@@ -92,14 +100,16 @@ def predict(model_name: str, request: PredictRequest):
 
     return PredictResponse(model=model_name, predictions=preds, probabilities=proba)
 
-@app.get("/model-architecture/{model_name}",
-        response_model=ModelArchitectureResponse, tags=["Utilities"])
+
+@app.get(
+    "/model-architecture/{model_name}", response_model=ModelArchitectureResponse, tags=["Utilities"]
+)
 def get_model_architecture(model_name: str, top_k: int = 2):
     """Get the architecture of a neural network model."""
     return ModelArchitectureResponse(**model_architecture_service(model_name, top_k=top_k))
 
-@app.post("/compare-dataset", 
-        response_model=DatasetCompareResponse, tags=["Utilities"])
+
+@app.post("/compare-dataset", response_model=DatasetCompareResponse, tags=["Utilities"])
 def compare_dataset_file(file: UploadFile = File(...)):
     """Compare a dataset file with the training dataset (TII-SSRC-23)."""
     return DatasetCompareResponse(**compare_dataset_service(file.file))
@@ -107,5 +117,8 @@ def compare_dataset_file(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    os.makedirs(get_model_dir(), exist_ok=True) # Flexible model directory path, default: cache/models
+
+    os.makedirs(
+        get_model_dir(), exist_ok=True
+    )  # Flexible model directory path, default: cache/models
     uvicorn.run("serve:app", host="0.0.0.0", port=8000, reload=True)

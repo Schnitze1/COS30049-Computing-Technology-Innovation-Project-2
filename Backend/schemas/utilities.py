@@ -1,11 +1,13 @@
 """Pydantic models for utility API endpoints."""
 
-from typing import List, Dict, Any, Union
+from typing import Any, Dict, List, Union
+
 from pydantic import BaseModel
 
 
 class DatasetCompareResponse(BaseModel):
     """Response model for dataset comparison endpoint."""
+
     reference_dataset: str
     records_uploaded: int
     features_uploaded: int
@@ -23,13 +25,14 @@ class DatasetCompareResponse(BaseModel):
                 "matching_features": 12,
                 "similarity_score": 0.8,
                 "missing_features": ["feature_x", "feature_y"],
-                "extra_features": ["new_feature_a"]
+                "extra_features": ["new_feature_a"],
             }
         }
 
 
 class ModelArchitectureResponse(BaseModel):
     """Response model for model architecture endpoint."""
+
     n_layers: int
     hidden_layer_sizes: Union[List[int], Any]  # Tolerant type for sklearn
     out_activation: str
@@ -48,8 +51,8 @@ class ModelArchitectureResponse(BaseModel):
                         "output_dim": 100,
                         "edges": [
                             {"src": 0, "tgt": 0, "weight": 0.123},
-                            {"src": 1, "tgt": 0, "weight": -0.456}
-                        ]
+                            {"src": 1, "tgt": 0, "weight": -0.456},
+                        ],
                     },
                     {
                         "layer_index": 1,
@@ -57,9 +60,9 @@ class ModelArchitectureResponse(BaseModel):
                         "output_dim": 100,
                         "edges": [
                             {"src": 0, "tgt": 0, "weight": 0.789},
-                            {"src": 1, "tgt": 1, "weight": -0.321}
-                        ]
-                    }
-                ]
+                            {"src": 1, "tgt": 1, "weight": -0.321},
+                        ],
+                    },
+                ],
             }
         }

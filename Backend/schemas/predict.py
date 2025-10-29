@@ -1,11 +1,13 @@
 """Pydantic models for prediction API requests and responses."""
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
 class PredictRequest(BaseModel):
     """Request model for prediction endpoint."""
+
     input_values: List[List[float]]
 
     class Config:
@@ -20,6 +22,7 @@ class PredictRequest(BaseModel):
 
 class PredictResponse(BaseModel):
     """Response model for prediction endpoint."""
+
     model: str
     predictions: List[int]
     probabilities: Optional[List[List[float]]] = None
@@ -29,27 +32,22 @@ class PredictResponse(BaseModel):
             "example": {
                 "model": "mlp",
                 "predictions": [0, 1],
-                "probabilities": [[0.9, 0.1], [0.2, 0.8]]
+                "probabilities": [[0.9, 0.1], [0.2, 0.8]],
             }
         }
 
 
 class ModelsResponse(BaseModel):
     """Response model for models listing endpoint."""
+
     models: List[Dict[str, Any]]
 
     class Config:
         json_schema_extra = {
             "example": {
                 "models": [
-                    {
-                        "model_name": "random_forest",
-                        "model_type": "supervised"
-                    },
-                    {
-                        "model_name": "dbscan",
-                        "model_type": "unsupervised"
-                    }
+                    {"model_name": "random_forest", "model_type": "supervised"},
+                    {"model_name": "dbscan", "model_type": "unsupervised"},
                 ]
             }
         }

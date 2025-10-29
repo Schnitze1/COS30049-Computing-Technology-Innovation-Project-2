@@ -13,7 +13,7 @@ class DatasetCompareResponse(BaseModel):
     similarity_score: float
     missing_features: List[str]
     extra_features: List[str]
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -34,7 +34,7 @@ class ModelArchitectureResponse(BaseModel):
     hidden_layer_sizes: Union[List[int], Any]  # Tolerant type for sklearn
     out_activation: str
     layers: List[Dict[str, Any]]
-    
+
     class Config:
         json_schema_extra = {
             "example": {

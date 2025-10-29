@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class PredictRequest(BaseModel):
     """Request model for prediction endpoint."""
     input_values: List[List[float]]
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -23,7 +23,7 @@ class PredictResponse(BaseModel):
     model: str
     predictions: List[int]
     probabilities: Optional[List[List[float]]] = None
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -37,7 +37,7 @@ class PredictResponse(BaseModel):
 class ModelsResponse(BaseModel):
     """Response model for models listing endpoint."""
     models: List[Dict[str, Any]]
-    
+
     class Config:
         json_schema_extra = {
             "example": {

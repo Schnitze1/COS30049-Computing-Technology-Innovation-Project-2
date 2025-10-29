@@ -1,4 +1,4 @@
-// Available models for testing.
+// Available models for testing
 export const AVAILABLE_MODELS = {
     random_forest: { type: 'supervised' },
     mlp: { type: 'supervised' },
@@ -6,7 +6,7 @@ export const AVAILABLE_MODELS = {
     dbscan: { type: 'unsupervised' }
 };
 
-// Must match backend scaler feature order.
+// backend scaler feature order
 export const FEATURE_NAMES = [
     'Fwd Packet Length Max',
     'Flow Duration',
@@ -25,7 +25,7 @@ export const FEATURE_NAMES = [
     'Protocol'
 ];
 
-// Real data extracted & inversed transformed from X_test.
+// Real data extracted & inversed transformed from X_test
 export const SAMPLES = {
     'Audio': [523.0, 20869869.0, 65280.0, 6128.884, 11498.55000000028, 32.0, 24296.0, 87.0150000000001, 7399.098999999929, 759.0, 108693.0, 1057.0, 61.475, 102.832, 6.0],
     'Background': [0.0, 84818131.0, 0.0, 0.0, 9424236.778, 0.0, 0.0, 0.11799999999993815, 13505304.221, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0],

@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Typography, Button, Grid, Alert, CircularProgress, Paper, Stack } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  Alert,
+  CircularProgress,
+  Paper,
+  Stack,
+} from '@mui/material';
 import { SAMPLES } from '../constants/model_playground';
 import ModelSelector from '../components/testing/ModelSelector';
 import SampleSelector from '../components/testing/SampleSelector';
@@ -11,6 +19,7 @@ import { predict } from '../api/predict';
 const Testing = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+
   const [selectedModel, setSelectedModel] = useState('random_forest');
   const [selectedSample, setSelectedSample] = useState('Audio');
   const [predictions, setPredictions] = useState(null);
@@ -20,7 +29,9 @@ const Testing = () => {
   const [success, setSuccess] = useState(null);
 
   const handlePredict = async () => {
-    setLoading(true); setError(null); setSuccess(null);
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
     try {
       const result = await predict(selectedModel, values);
       setPredictions(result);
@@ -38,7 +49,7 @@ const Testing = () => {
   };
 
   const handleValueChange = (index, newVal) => {
-    setValues((prev)=> {
+    setValues((prev) => {
       const next = [...prev];
       next[index] = newVal === '' ? '' : Number(newVal);
       return next;
@@ -46,52 +57,123 @@ const Testing = () => {
   };
 
   return (
-    <Box sx={{ p:3, maxWidth:1400, mx:'auto', minHeight:'100vh', bgcolor:'background.default' }}>
-      <Typography variant="h4" gutterBottom sx={{ 
-          mb:4, 
-          textAlign:'center',
+    <Box
+      sx={{
+        p: 3,
+        maxWidth: 1600,
+        mx: 'auto',
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{
+          mb: 4,
+          textAlign: 'center',
           fontWeight: 'bold',
           color: isDark ? '#EF9B7D' : '#D95C39',
-      }}>
+        }}
+      >
         Model Playground
       </Typography>
-      <Grid container spacing={4} sx={{ height:'calc(100vh - 200px)' }}>
-        <Grid size={6}>
-          <Paper sx={{ p:3, height:'100%', display:'flex', flexDirection:'column' }}>
-            <Typography variant="h6" gutterBottom sx={{ mb:3 }}>Configuration</Typography>
-            <Stack spacing={3} sx={{ flex:1 }}>
-              <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-              <SampleSelector value={selectedSample} onChange={handleSampleChange} />
-              <FeatureGrid values={values} onChange={handleValueChange} />
-              <Button variant="contained" onClick={handlePredict} disabled={loading} fullWidth size="large"
-                sx={{ 
-                  py:1.5,
-                  background: "linear-gradient(45deg, #6a11cb, #2575fc)",
-                  color: "#fff",
-                  '&:hover': {
-                    background: "linear-gradient(45deg, #5b0eb3, #1f63e0)",
-                  },
-                }}>
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Predict'}
-              </Button>
-            </Stack>
-          </Paper>
-        </Grid>
-        <Grid size={6}>
-          <Paper sx={{ p:3, height:'100%', display:'flex', flexDirection:'column' }}>
-            <Typography variant="h6" gutterBottom sx={{ mb:3 }}>Predicted Output</Typography>
-            <Box sx={{ flex:1, display:'flex', flexDirection:'column' }}>
-              {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
-              {success && <Alert severity="success" sx={{ mb:2 }}>{success}</Alert>}
-              {predictions
-                ? <PredictionPanel predictions={predictions} />
-                : <Box sx={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'text.secondary' }}>
-                    <Typography variant="body1">Select a model and sample, then click Predict to see results</Typography>
-                  </Box>}
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+
+      {/* Force side-by-side on desktop, stacked on mobile */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 4,
+          alignItems: 'stretch',
+          width: '100%',
+        }}
+      >
+        {/* Left: Configuration */}
+        <Paper
+          sx={{
+            flex: 1,
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+            Configuration
+          </Typography>
+
+          <Stack spacing={3} sx={{ flex: 1 }}>
+            <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+            <SampleSelector value={selectedSample} onChange={handleSampleChange} />
+            <FeatureGrid values={values} onChange={handleValueChange} />
+          </Stack>
+
+          <Button
+            variant="contained"
+            onClick={handlePredict}
+            disabled={loading}
+            fullWidth
+            size="large"
+            sx={{
+              mt: 3,
+              py: 1.5,
+              background: 'linear-gradient(45deg, #6a11cb, #2575fc)',
+              color: '#fff',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #5b0eb3, #1f63e0)',
+              },
+            }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Predict'}
+          </Button>
+        </Paper>
+
+        {/* Right: Predicted Output */}
+        <Paper
+          sx={{
+            flex: 1,
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+            Predicted Output
+          </Typography>
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {success}
+              </Alert>
+            )}
+
+            {predictions ? (
+              <PredictionPanel predictions={predictions} />
+            ) : (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                  minHeight: '300px',
+                }}
+              >
+                <Typography variant="body1">
+                  Select a model and sample, then click Predict to see results
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 };

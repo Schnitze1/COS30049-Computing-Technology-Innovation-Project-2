@@ -13,6 +13,19 @@ class DatasetCompareResponse(BaseModel):
     similarity_score: float
     missing_features: List[str]
     extra_features: List[str]
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "reference_dataset": "TII-SSRC-23",
+                "records_uploaded": 1000,
+                "features_uploaded": 15,
+                "matching_features": 12,
+                "similarity_score": 0.8,
+                "missing_features": ["feature_x", "feature_y"],
+                "extra_features": ["new_feature_a"]
+            }
+        }
 
 
 class ModelArchitectureResponse(BaseModel):
@@ -21,3 +34,32 @@ class ModelArchitectureResponse(BaseModel):
     hidden_layer_sizes: Union[List[int], Any]  # Tolerant type for sklearn
     out_activation: str
     layers: List[Dict[str, Any]]
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "n_layers": 3,
+                "hidden_layer_sizes": [100, 100],
+                "out_activation": "logistic",
+                "layers": [
+                    {
+                        "layer_index": 0,
+                        "input_dim": 15,
+                        "output_dim": 100,
+                        "edges": [
+                            {"src": 0, "tgt": 0, "weight": 0.123},
+                            {"src": 1, "tgt": 0, "weight": -0.456}
+                        ]
+                    },
+                    {
+                        "layer_index": 1,
+                        "input_dim": 100,
+                        "output_dim": 100,
+                        "edges": [
+                            {"src": 0, "tgt": 0, "weight": 0.789},
+                            {"src": 1, "tgt": 1, "weight": -0.321}
+                        ]
+                    }
+                ]
+            }
+        }

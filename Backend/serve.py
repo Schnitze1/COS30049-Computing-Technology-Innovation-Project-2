@@ -9,16 +9,28 @@ from fastapi.responses import JSONResponse
 
 from config import get_model_dir
 from validators.input import validate_input_values
-from services.prediction import ensure_model_exists, predict_with_preprocessing
-from services.model_inspect import model_architecture
-from services.dataset_compare import compare_dataset
+from services.prediction import ensure_model_exists, predict_with_preprocessing_service
+from services.model_inspect import model_architecture_service
+from services.dataset_compare import compare_dataset_service
 from schemas.predict import PredictRequest, PredictResponse, ModelsResponse
 from schemas.utilities import ModelArchitectureResponse, DatasetCompareResponse
 from utils.model_io import list_models
 
+# FASTAPI APP SETUP:
 app = FastAPI(title="Model Inference API", version="2.0.0")
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
+# CORS Middleware: allow requests from the frontend (localhost or production environment).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in origins if o.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# EXCEPTION HANDLERS:
 # Validation error handler for consistent error payloads
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -50,15 +62,8 @@ async def log_requests(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
-# CORS Middleware: allow requests from the frontend (localhost or production environment).
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[o.strip() for o in origins if o.strip()],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
+# ENDPOINTS:
 @app.get("/health")
 def health():
     """Health check endpoint."""
@@ -83,23 +88,24 @@ def predict(model_name: str, request: PredictRequest):
     """
     ensure_model_exists(model_name)
     validate_input_values(request.input_values, allow_negative=False, expected_num_features=15)
-    preds, proba = predict_with_preprocessing(model_name, request.input_values)
+    preds, proba = predict_with_preprocessing_service(model_name, request.input_values)
 
     return PredictResponse(model=model_name, predictions=preds, probabilities=proba)
 
 @app.get("/model-architecture/{model_name}",
-         response_model=ModelArchitectureResponse, tags=["Utilities"])
+        response_model=ModelArchitectureResponse, tags=["Utilities"])
 def get_model_architecture(model_name: str, top_k: int = 2):
     """Get the architecture of a neural network model."""
-    return ModelArchitectureResponse(**model_architecture(model_name, top_k=top_k))
+    return ModelArchitectureResponse(**model_architecture_service(model_name, top_k=top_k))
 
-@app.post("/compare-dataset", response_model=DatasetCompareResponse, tags=["Utilities"])
+@app.post("/compare-dataset", 
+        response_model=DatasetCompareResponse, tags=["Utilities"])
 def compare_dataset_file(file: UploadFile = File(...)):
     """Compare a dataset file with the training dataset (TII-SSRC-23)."""
-    return DatasetCompareResponse(**compare_dataset(file.file))
+    return DatasetCompareResponse(**compare_dataset_service(file.file))
 
 
 if __name__ == "__main__":
     import uvicorn
-    os.makedirs(get_model_dir(), exist_ok=True)
+    os.makedirs(get_model_dir(), exist_ok=True) # Flexible model directory path, default: cache/models
     uvicorn.run("serve:app", host="0.0.0.0", port=8000, reload=True)

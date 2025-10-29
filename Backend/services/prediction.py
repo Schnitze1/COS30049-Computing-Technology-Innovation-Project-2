@@ -12,8 +12,7 @@ def ensure_model_exists(model_name: str) -> None:
         raise HTTPException(status_code=404, detail={"message": f"Model '{model_name}' not found"})
 
 
-def predict_with_preprocessing(model_name: str, instances: List[List[float]]) -> Tuple[List[int], Optional[List[List[float]]]]:
-    ensure_model_exists(model_name)
+def predict_with_preprocessing_service(model_name: str, instances: List[List[float]]) -> Tuple[List[int], Optional[List[List[float]]]]:
     processed = preprocess_input_data(instances)
     model = load_model(model_name, out_dir=get_model_dir())
     preds, proba = run_prediction(model, processed.tolist())

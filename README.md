@@ -17,16 +17,19 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 
+# Start API server
+uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
+```
+- Backend SwaggerUI: `http://127.0.0.1:8000/docs`.
+
+- Optional backend data preprocessing & models training:
+```bash
 # (Optional): Preprocess data (creates processed_data.npz and feature_metadata.pkl)
 python data_preprocessing\data_cleaning.py
 
 # (Optional): Train and evaluate models (caches to Backend/cache/models)
 python main.py
-
-# Start API server
-uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
 ```
-Backend SwaggerUI: `http://127.0.0.1:8000/docs`.
 
 ### Frontend
 
@@ -57,6 +60,122 @@ pytest -q
 - `tests/conftest.py` - Pytest configuration and fixtures
 - `tests/test_validators.py` - Unit tests for input validation
 - `tests/test_api.py` - API endpoint integration tests
+
+## API Endpoints
+
+The FastAPI backend provides 5 RESTful endpoints:
+
+| # | Method | Endpoint | Description | Tags |
+|---|--------|----------|-------------|------|
+| 1 | `GET` | `/health` | Health check endpoint | - |
+| 2 | `GET` | `/models` | List all available ML models | - |
+| 3 | `POST` | `/predict/{model_name}` | Make predictions using specified model | Inference API |
+| 4 | `GET` | `/model-architecture/{model_name}` | Get neural network architecture details | Utilities |
+| 5 | `POST` | `/compare-dataset` | Compare uploaded dataset with reference | Utilities |
+
+### Detailed API Documentation
+
+#### 1. `GET /health`
+**Description**: Health check endpoint to verify API server status.
+**Response (200 OK)**:
+```json
+{
+  "status": "ok"
+}
+```
+
+#### 2. `GET /models`
+**Description**: Lists all available machine learning models with metadata.
+**Response (200 OK)**:
+```json
+{
+  "models": [
+    {
+      "model_name": "random_forest",
+      "model_type": "supervised"
+    },
+    {
+      "model_name": "mlp", 
+      "model_type": "supervised"
+    },
+    {
+      "model_name": "dbscan",
+      "model_type": "unsupervised"
+    }
+  ]
+}
+```
+
+#### 3. `POST /predict/{model_name}`
+**Description**: Makes predictions using the specified model. Accepts raw (unscaled) input values.
+**Parameters**:
+- `model_name` (path): The name of the model to use (e.g., `mlp`, `random_forest`, `dbscan`).
+**Request Body (application/json)**:
+```json
+{
+  "input_values": [
+    [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+  ]
+}
+```
+**Response (200 OK)**:
+```json
+{
+  "model": "mlp",
+  "predictions": [0],
+  "probabilities": [[0.9, 0.1]]
+}
+```
+**Error Responses**:
+- `404 Not Found`: `{"message": "Model '{model_name}' not found"}`
+- `422 Unprocessable Entity`: `{"message": "Validation error", "errors": [...]}` (e.g., wrong number of features, non-numeric input, negative values)
+- `400 Bad Request`: `{"message": "Error during data preprocessing: ..."}`
+
+#### 4. `GET /model-architecture/{model_name}`
+**Description**: Retrieves the architecture details of a neural network model.
+**Parameters**:
+- `model_name` (path): The name of the MLP model (e.g., `mlp`).
+- `top_k` (query, optional): Number of top weighted edges to return per neuron. Defaults to 2.
+**Response (200 OK)**:
+```json
+{
+  "n_layers": 3,
+  "hidden_layer_sizes": [100, 100],
+  "out_activation": "logistic",
+  "layers": [
+    {
+      "layer_index": 0,
+      "input_dim": 15,
+      "output_dim": 100,
+      "edges": [{"src": 0, "tgt": 0, "weight": 0.123}]
+    }
+  ]
+}
+```
+**Error Responses**:
+- `404 Not Found`: `{"message": "Model '{model_name}' not found"}`
+- `400 Bad Request`: `{"message": "Model '{model_name}' has no accessible architecture"}` (if not an MLP)
+
+#### 5. `POST /compare-dataset`
+**Description**: Compares an uploaded CSV dataset against a reference dataset.
+**Request Body (multipart/form-data)**:
+- `file` (form data): The CSV file to upload.
+**Response (200 OK)**:
+```json
+{
+  "reference_dataset": "TII-SSRC-23",
+  "records_uploaded": 1000,
+  "features_uploaded": 15,
+  "matching_features": 12,
+  "similarity_score": 0.8,
+  "missing_features": ["feature_x", "feature_y"],
+  "extra_features": ["new_feature_a"]
+}
+```
+**Error Responses**:
+- `400 Bad Request`: `{"message": "Invalid CSV format. Please upload a valid CSV file."}`
+- `404 Not Found`: `{"message": "Reference dataset not found at ..."}`
+- `500 Internal Server Error`: `{"message": "Dataset comparison failed: ..."}`
 
 ## Architecture
 

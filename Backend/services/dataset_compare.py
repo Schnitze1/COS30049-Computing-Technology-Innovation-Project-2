@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from typing import BinaryIO
 
-def compare_dataset(file_obj: BinaryIO) -> dict:
+def compare_dataset_service(file_obj: BinaryIO) -> dict:
     """ Compare a dataset file with the training dataset (TII-SSRC-23). """
     try:
         df_user = pd.read_csv(file_obj)

@@ -29,9 +29,9 @@ export async function compareDataset(formData) {
   return res.json();
 }
 
-// GET /model-architecture/{model_name}?topK=2
+// GET /model-architecture/{model_name}?top_k=2
 export async function getModelArchitecture(modelName, topK = 2) {
-  const res = await fetch(`${API_BASE}/model-architecture/${modelName}?topK=${topK}`);
+  const res = await fetch(`${API_BASE}/model-architecture/${modelName}?top_k=${topK}`);
   if (!res.ok) {
     throw new Error('Model architecture failed');
   }

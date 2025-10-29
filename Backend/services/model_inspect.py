@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from utils.model_io import list_models, load_model
 from config import get_model_dir
 
-def model_architecture(model_name: str, top_k: int = 5) -> dict:
+def model_architecture_service(model_name: str, top_k: int = 5) -> dict:
     """Get the architecture of a neural network model."""
     models = list_models(out_dir=get_model_dir())
     

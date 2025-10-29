@@ -9,6 +9,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   const edgesRef = useRef([]);
   const [activeClass, setActiveClass] = useState(0);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [error, setError] = useState(null);
   const layerColors = useMemo(() => ["#4285F4", "#34A853", "#EA4335"], []); 
 
   const CLASS_LABELS = useMemo(() => [
@@ -22,12 +23,17 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
   };
 
   useEffect(() => {
+    setError(null);
     getModelArchitecture(modelName, 2)
       .then((data) => {
+        console.log('Model architecture data:', data);
         buildNetwork(data);
         setIsDataLoaded(true); 
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error('Error loading model architecture:', err);
+        setError(err.message);
+      });
   }, [modelName]);
 
   const buildNetwork = (data) => {
@@ -59,7 +65,7 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
       const srcs = layers[l].neurons;
       const tgts = layers[l + 1].neurons;
       layer.edges.forEach((edge) => {
-        const src = srcs[edge.src], tgt = tgts[edge.tgt];
+        const src = srcs[edge.source_i], tgt = tgts[edge.target_i];
         if (src && tgt) edges.push({ src, tgt, weight: edge.weight, layer: l });
       });
     });
@@ -212,6 +218,19 @@ const DeepLearningDiagram = ({ modelName = "mlp", isDark = false }) => {
     if (!isDataLoaded) return;
     drawDiagram(activeClass);
   }, [activeClass, isDark, isDataLoaded, drawDiagram]);
+
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px" }}>
+        <div style={{ color: isDark ? "#ff6b6b" : "#d32f2f", fontSize: "18px", marginBottom: "20px" }}>
+          Error loading model architecture: {error}
+        </div>
+        <div style={{ color: isDark ? "#ccc" : "#666", fontSize: "14px" }}>
+          Please check if the backend server is running and the MLP model is available.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

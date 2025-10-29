@@ -57,6 +57,16 @@ uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
 
 Access API documentation at: `http://127.0.0.1:8000/docs`
 
+Environment variables (optional):
+
+```
+# Directory where trained models are stored (defaults to cache/models)
+MODEL_DIR=cache/models
+
+# Comma-separated list of allowed CORS origins for the frontend
+CORS_ORIGINS=http://localhost:3000
+```
+
 ## Project Structure
 
 ```
@@ -166,18 +176,35 @@ python serve.py
 
 ### Make Predictions
 ```bash
-curl -X POST "http://127.0.0.1:8000/predict/{model}" \
+curl -X POST "http://127.0.0.1:8000/predict/mlp" \
      -H "Content-Type: application/json" \
      -d '{
-       "instances": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+       "input_values": [[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.2,0.3,0.4,0.5,0.6]]
      }'
 ```
 
-### Available Endpoints
-- `GET /health`: Health check
-- `GET /models`: List available models
-- `POST /predict`: Make predictions
-- `GET /docs`: Interactive API documentation
+### Available Endpoints (Back-end)
+- `GET /health` — Health check
+- `GET /models` — List available models
+- `POST /predict/{model_name}` — Predict with raw input (backend scales internally). Body: `{ "input_values": [[15 floats]] }`
+- `GET /model-architecture/{model_name}?top_k=2` — Returns MLP layer edges for visualization
+- `POST /compare-dataset` — Multipart CSV upload (form field `file`) to compare columns against reference
+- `GET /docs` — Interactive OpenAPI docs
+
+Response and error codes:
+- 200 OK on success
+- 404 Unknown model (or missing reference CSV)
+- 422 Input validation failure (e.g., not 15 features, non-numeric, negatives)
+- 400 Preprocessing/CSV parse error
+- 500 Unexpected error (see logs; `X-Process-Time` header is added by middleware)
+
+### Run tests
+
+```
+cd Backend
+pip install pytest
+pytest -q
+```
 
 ## Requirements
 

@@ -1,42 +1,45 @@
 import logging
 from typing import List, Optional, Tuple
-
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
 def run_prediction(
-    model, instances: List[List[float]]
+        model,
+        instances: List[List[float]]
 ) -> Tuple[List[int], Optional[List[List[float]]]]:
     """
-    Run prediction and return:
-        - preds: list[int] (class indices)
-        - proba: Optional[List[List[float]]] when predict_proba exists
-          (shape: n_samples x n_classes)
+    Run predictions using a trained model and return class indices and probabilities.
 
-    This function:
-        - converts instances to a numpy array
-        - returns full predict_proba matrix (converted to python lists).
+    :param model:
+        Trained model object implementing `predict` and optionally `predict_proba`.
+    :param instances:
+        Nested list of float values representing input samples.
+    :return:
+        Tuple containing:
+            - preds (List[int]): Predicted class indices.
+            - proba (Optional[List[List[float]]]): Prediction probabilities if available.
     """
+    # Convert input data to NumPy array
     X = np.array(instances, dtype=float)
-    logger.debug(f"Converted input to numpy array with shape: {X.shape}")
+    logger.debug("Converted input to numpy array with shape: %s", X.shape)
 
-    # Use fit_predict for DBSCAN since it doesn't have a predict method
+    # Handle DBSCAN models which use fit_predict instead of predict
     if hasattr(model, "__class__") and "DBSCAN" in str(type(model)):
         preds = model.fit_predict(X).tolist()
     else:
-        # Standard predict for other models
         preds = model.predict(X).tolist()
 
     proba = None
+    # Compute probabilities if supported by the model
     if hasattr(model, "predict_proba"):
         try:
-            proba_vals = model.predict_proba(X)
-            if isinstance(proba_vals, np.ndarray):
-                proba = proba_vals.tolist()
-        except Exception as e:
-            logger.warning(f"Predict_proba failed: {e}")
+            proba_values = model.predict_proba(X)
+            if isinstance(proba_values, np.ndarray):
+                proba = proba_values.tolist()
+        except Exception as exc:
+            logger.warning("predict_proba failed: %s", exc)
             proba = None
 
     return preds, proba

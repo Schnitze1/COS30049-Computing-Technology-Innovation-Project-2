@@ -1,7 +1,6 @@
 import os
 import pickle
 from datetime import datetime
-
 import json
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,19 +15,36 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 
-# Create directory
+"""
+Clean and preprocess the traffic dataset for machine learning.
+
+This script performs the following tasks:
+- Reads input data and generates exploratory data analysis (EDA) visuals.
+- Removes redundant features based on correlation analysis.
+- Encodes target variables and performs feature selection.
+- Applies SMOTE for balancing class distributions.
+- Saves processed data, metadata, and logs for downstream modeling.
+
+:param
+    input_file_path: path to the raw input data file
+:return
+    processed_data: compressed .npz file containing preprocessed training and testing sets
+    feature_metadata: pickle file containing label encoders, feature names, and scalers
+    data_preprocessing_log: JSON log file summarizing preprocessing details
+"""
+
+# Create directories for processed output and exploratory analysis
 output_dir = "data_preprocessing/output"
 eda_dir = "data_preprocessing/EDA"
-
 os.makedirs(output_dir, exist_ok=True)
 os.makedirs(eda_dir, exist_ok=True)
 
-# ---------------------------------------------------------- #
-# Read data
+
+# Read input data
 df = pd.read_csv("data_preprocessing/input/data.csv", index_col=False)
 og_shape = df.shape
 
-# ---------------------------------------------------------- #
+
 # Plot distribution of labels
 plt.figure(figsize=(10, 6))
 ax = sns.countplot(x="Label", data=df)
@@ -37,7 +53,7 @@ plt.xlabel("Label")
 plt.ylabel("Count")
 plt.xticks(rotation=45, ha="right")
 
-# Add count numbers on top of the bars
+# Add count numbers on top of bars
 for p in ax.patches:
     ax.annotate(
         f"{p.get_height()}",
@@ -53,8 +69,8 @@ for p in ax.patches:
 plt.tight_layout()
 # plt.show()
 
-# =========================================================== #
-# Drop the unnecessary columns for correlation analysis
+
+# Drop unnecessary columns for correlation analysis
 corr_df = df.drop(
     columns=[
         "Flow ID",
@@ -69,43 +85,47 @@ corr_df = df.drop(
     ]
 )
 
-# Calculate the correlation matrix
+# Compute and visualize correlation matrix
 corr_df1 = corr_df.corr()
-
-# Plot correlation matrix
-plt.figure(figsize=(20, 15))
-sns.heatmap(corr_df1, annot=False, fmt=".2f", cmap="coolwarm", vmin=-1, vmax=1, linewidths=0.5)
-plt.title("Correlation Matrix Heatmap - Original Features")
-plt.tight_layout()
-plt.savefig(f"{eda_dir}/correlation_matrix_original.png", dpi=300, bbox_inches="tight")
-# plt.show()
-
-corr_matrix = corr_df1.abs()
-
-# Create triangle matrix
-# i.e:
-#        f1    f2    f3
-# f1    NaN  0.95  0.20
-# f2    NaN   NaN  0.30
-# f3    NaN   NaN   NaN
-upper = corr_df1.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-
-to_drop = [col for col in upper.columns if any(upper[col] > 0.8)]
-df_reduced = df.drop(columns=to_drop)
-
-# Plot correlation matrix after removing redundant features
-corr_df_reduced = corr_df.drop(columns=to_drop).corr()
 
 plt.figure(figsize=(20, 15))
 sns.heatmap(
-    corr_df_reduced, annot=False, fmt=".2f", cmap="coolwarm", vmin=-1, vmax=1, linewidths=0.5
+    corr_df1,
+    annot=False,
+    fmt=".2f",
+    cmap="coolwarm",
+    vmin=-1,
+    vmax=1,
+    linewidths=0.5,
+)
+plt.title("Correlation Matrix Heatmap - Original Features")
+plt.tight_layout()
+plt.savefig(f"{eda_dir}/correlation_matrix_original.png", dpi=300, bbox_inches="tight")
+
+# Identify redundant features (correlation > 0.8)
+corr_matrix = corr_df1.abs()
+upper = corr_df1.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+to_drop = [col for col in upper.columns if any(upper[col] > 0.8)]
+df_reduced = df.drop(columns=to_drop)
+
+# Plot correlation matrix after feature reduction
+corr_df_reduced = corr_df.drop(columns=to_drop).corr()
+plt.figure(figsize=(20, 15))
+sns.heatmap(
+    corr_df_reduced,
+    annot=False,
+    fmt=".2f",
+    cmap="coolwarm",
+    vmin=-1,
+    vmax=1,
+    linewidths=0.5,
 )
 plt.title("Correlation Matrix Heatmap - After Removing Redundant Features")
 plt.tight_layout()
 plt.savefig(f"{eda_dir}/correlation_matrix_reduced.png", dpi=300, bbox_inches="tight")
-# plt.show()
 
-# =========================================================== #
+
+# Define preprocessing parameters
 TARGET_VARIABLE = "Traffic Type"
 DROP_COLUMNS = ["Flow ID", "Src IP", "Src Port", "Dst IP", "Dst Port", "Timestamp"]
 TARGET_TO_DROP = {
@@ -114,56 +134,53 @@ TARGET_TO_DROP = {
     "Traffic Subtype": ["Label", "Traffic Type"],
 }
 
-# Drop 5-tuple collumns and timestamp
+# Drop identifier and timestamp columns
 df = df_reduced.drop(columns=DROP_COLUMNS)
 
-# Filter out duplicates within the same target
+# Filter duplicates and drop target-related columns
 df = df.round(3)
 df = df.drop_duplicates()
 df = df.drop(columns=TARGET_TO_DROP[TARGET_VARIABLE])
 
-df.head()
 
-
+# Split features and target variable
 X = df.drop(TARGET_VARIABLE, axis=1)
 y = df[TARGET_VARIABLE]
 
-# Encode target
+# Encode target variable
 le = LabelEncoder()
 y = le.fit_transform(y)
 
-# Compute train and test split
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, stratify=y, test_size=0.2, random_state=42
 )
 
-# Save original column names for later use in API
+# Save original feature names
 X_train_raw_columns = X_train.columns.tolist()
 
-# Identifying Numerical and Categorical columns
+# Identify numerical and categorical columns
 numerical_cols = X_train.select_dtypes(include=[np.number]).columns.to_list()
 categorical_cols = X_train.select_dtypes(include=[object]).columns.to_list()
 
-# Pipelines for Numerical and Categorical Data Transformations
+
+# Define data transformation pipelines
 numerical_transformer = Pipeline(
     steps=[
-        ("imputer", SimpleImputer(strategy="mean")),  # Impute missing values with mean
-        ("var", VarianceThreshold(threshold=0.0)),  # removes all-constant cols
-        ("scaler", StandardScaler()),  # Scale numerical features
+        ("imputer", SimpleImputer(strategy="mean")),
+        ("var", VarianceThreshold(threshold=0.0)),
+        ("scaler", StandardScaler()),
     ]
 )
 
 categorical_transformer = Pipeline(
     steps=[
-        ("imputer", SimpleImputer(strategy="most_frequent")),  # Impute missing values with mode
-        (
-            "onehot",
-            OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-        ),  # One-hot encode categorical features
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ]
 )
 
-# Column Transformer combining both pipelines
+# Combine numerical and categorical transformers
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", numerical_transformer, numerical_cols),
@@ -171,40 +188,39 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# =========================================================== #
-# Select top features importance using Random Forest on RAW data
+
+# Feature selection using Random Forest importance
 rf_selector = RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)
 rf_selector.fit(X_train, y_train)
 
-# Get feature importance from raw data
 importance_df = (
-    pd.DataFrame({"feature_name": X_train.columns, "importance": rf_selector.feature_importances_})
+    pd.DataFrame(
+        {"feature_name": X_train.columns, "importance": rf_selector.feature_importances_}
+    )
     .sort_values("importance", ascending=False)
     .reset_index(drop=True)
 )
 
-# correct indices: map names back to ORIGINAL X_train columns
 original_indices = [
     list(X_train.columns).index(fn) for fn in importance_df["feature_name"].head(15)
 ]
 top_feature_indices = original_indices
 top_feature_names = importance_df["feature_name"].head(15).to_list()
 
-# Save feature importance analysis to CSV
+# Save feature importance results
 importance_df.to_csv(f"{output_dir}/feature_importance_analysis.csv", index=False)
 
-# Select the top 15 features from RAW data
+# Select top 15 features
 X_train_selected = X_train.iloc[:, top_feature_indices]
 X_test_selected = X_test.iloc[:, top_feature_indices]
 
-# Create a simple scaler for the 15 selected features
-# This scaler will work on the raw values of these 15 features
+# Standardize selected features
 selected_features_scaler = StandardScaler()
 X_train = selected_features_scaler.fit_transform(X_train_selected)
 X_test = selected_features_scaler.transform(X_test_selected)
 
-# ---------------------------------------------------------- #
-# Create feature importance visualization
+
+# Plot feature importance
 top_15_importance = importance_df.head(15)
 plt.figure(figsize=(12, 8))
 plt.barh(range(len(top_15_importance)), top_15_importance["importance"])
@@ -214,13 +230,13 @@ plt.title("Top 15 Most Important Features")
 plt.gca().invert_yaxis()
 plt.tight_layout()
 plt.savefig(f"{output_dir}/feature_importance_top15.png", dpi=300, bbox_inches="tight")
-# plt.show()
 
-# ---------------------------------------------------------- #
+
+# Generate boxplots for top numerical features
 num_top = [n for n in top_feature_names if n.startswith("num__")]
 plot_cols = []
 for n in num_top:
-    base = n.split("__", 1)[1]  # strip 'num__'
+    base = n.split("__", 1)[1]
     if base in df.columns and pd.api.types.is_numeric_dtype(df[base]) and df[base].nunique() > 1:
         plot_cols.append(base)
 
@@ -241,37 +257,29 @@ plt.tight_layout()
 plt.savefig(f"{output_dir}/feature_boxplots_top15.png", dpi=300, bbox_inches="tight")
 
 
-# =========================================================== #
-# Apply SMOTE
-
-# Save original data before SMOTE for unsupervised learning
+# Apply SMOTE for balancing classes
 X_train_unSMOTE = X_train.copy()
 
-# Check class distribution before SMOTE
 unique_labels, label_counts = np.unique(y_train, return_counts=True)
 
 try:
-    # Equalize target class size with maximum class size (e.g: 800 samples each class type)
     target_size = int(max(label_counts))
     target_counts = {int(i): target_size for i in range(len(le.classes_))}
 
-    # Apply SMOTE with equal target per class
     smote = SMOTE(
         sampling_strategy=target_counts,
         random_state=42,
-        k_neighbors=max(1, min(5, int(min(label_counts)) - 1)),  # Ensure k_neighbors is valid
+        k_neighbors=max(1, min(5, int(min(label_counts)) - 1)),
     )
     X_train, y_train = smote.fit_resample(X_train, y_train)
-
 except Exception as e:
     print(f"SMOTE failed: {e}")
     print("Using original data with class_weight='balanced' in models.")
 
-# Class distribution after SMOTE
 unique_labels, counts_after = np.unique(y_train, return_counts=True)
 
-# ---------------------------------------------------------- #
-# Plotting SMOTE before and after
+
+# Visualize class distributions before and after SMOTE
 plt.figure(figsize=(15, 5))
 
 # Before SMOTE
@@ -304,10 +312,9 @@ plt.legend()
 
 plt.tight_layout()
 plt.savefig(f"{output_dir}/class_distribution_comparison.png", dpi=300, bbox_inches="tight")
-# plt.show()
 
-# =========================================================== #
-# Log to save data for main pipeline
+
+# Create preprocessing log
 log_data = {
     "timestamp": datetime.now().isoformat(),
     "dataset_info": {
@@ -322,7 +329,7 @@ log_data = {
         "selected_features_count": int(len(top_feature_names)),
         "top_features": top_feature_names,
         "feature_importance_scores": importance_df.head(15).to_dict("records"),
-        "top_feature_indices": top_feature_indices,  # Indices of selected features in raw data
+        "top_feature_indices": top_feature_indices,
     },
     "class_distribution": {
         "before_smote": {str(label): int(count) for label, count in zip(le.classes_, label_counts)},
@@ -348,29 +355,28 @@ log_data = {
     },
 }
 
-# Save log
+# Save preprocessing log
 with open(f"{output_dir}/data_preprocessing_log.json", "w") as f:
     json.dump(log_data, f, indent=2)
 
 print(f"Preprocessing log saved to: {output_dir}/data_preprocessing_log.json")
 
-# =========================================================== #
-# Save processed data
+
+# Save processed data and metadata
 np.savez_compressed(
     f"{output_dir}/processed_data.npz",
-    X_train_unSMOTE=X_train_unSMOTE,  # Original X_train before SMOTE for unsupervised learning
+    X_train_unSMOTE=X_train_unSMOTE,
     X_train=X_train,
     X_test=X_test,
     y_train=y_train,
     y_test=y_test,
 )
 
-# Save metadata (including label encoder, feature names, and scaler for 15 features)
 with open(f"{output_dir}/feature_metadata.pkl", "wb") as f:
     pickle.dump(
         {
-            "label_encoder": le,  # LabelEncoder
-            "feature_names": top_feature_names,  # Top 15 original feature names
+            "label_encoder": le,
+            "feature_names": top_feature_names,
             "target_variable": "Traffic Type",
             "selected_features_scaler": selected_features_scaler,
         },

@@ -1,12 +1,11 @@
-"""Pydantic models for utility API endpoints."""
-
 from typing import Any, Dict, List, Union
-
 from pydantic import BaseModel
+
+"""Pydantic models for utility API endpoints."""
 
 
 class DatasetCompareResponse(BaseModel):
-    """Response model for dataset comparison endpoint."""
+    """Response model for the dataset comparison endpoint."""
 
     reference_dataset: str
     records_uploaded: int
@@ -31,7 +30,7 @@ class DatasetCompareResponse(BaseModel):
 
 
 class ModelArchitectureResponse(BaseModel):
-    """Response model for model architecture endpoint."""
+    """Response model for the model architecture endpoint."""
 
     n_layers: int
     hidden_layer_sizes: Union[List[int], Any]  # Tolerant type for sklearn

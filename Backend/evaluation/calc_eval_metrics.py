@@ -1,10 +1,4 @@
-"""
-Multiclass Network Traffic Classification Evaluation
-Evaluates models for multiclass threat type classification
-"""
-
 from typing import Dict
-
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 from sklearn.metrics import (
@@ -22,11 +16,23 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 
+"""
+Multiclass Network Traffic Classification Evaluation
+
+Evaluates models for multiclass threat type classification.
+Provides functions for:
+- Evaluating supervised classifiers (accuracy, precision, recall, F1, ROC-AUC)
+- Evaluating clustering models (K-Means, DBSCAN) using majority vote
+- Printing formatted multiclass and binary ("Label") evaluation results
+"""
+
 
 def kmeans_eval(km_model, X, y_true):
     """
-    Evaluate K-means clustering for multiclass using majority vote
-    Uses the already trained K-means model
+    Evaluate K-means clustering for multiclass using majority vote.
+
+    Uses the already trained K-means (or DBSCAN) model and maps each cluster
+    to the most frequent true label within that cluster.
     """
     if isinstance(km_model, KMeans):
         clusters = km_model.predict(X)
@@ -34,8 +40,9 @@ def kmeans_eval(km_model, X, y_true):
         # DBSCAN labels may include -1 for noise
         clusters = km_model.fit_predict(X)
 
-    # Majority vote: for each observed cluster label, pick the most frequent y_true
+    # Majority vote: assign each cluster to the most frequent class
     mapping = {}
+
     # Fallback for noise (-1) or empty clusters → use overall majority class
     overall_vals, overall_counts = np.unique(y_true, return_counts=True)
     default_label = int(overall_vals[np.argmax(overall_counts)])
@@ -49,32 +56,34 @@ def kmeans_eval(km_model, X, y_true):
         vals, counts = np.unique(y_true[idx], return_counts=True)
         mapping[c] = int(vals[np.argmax(counts)]) if len(vals) else default_label
 
-    # convert clusters -> predicted labels (handle unseen labels like -1)
+    # Convert clusters to predicted labels, handling unseen ones like -1
     y_pred = np.array([mapping.get(c, default_label) for c in clusters], dtype=int)
 
     return y_pred, mapping
 
 
 def evaluate_clustering(model, X_test, y_test):
-    """Evaluate clustering model: clustering metrics + majority-vote multiclass metrics."""
-    # Cluster assignments
+    """
+    Evaluate clustering model using both clustering and multiclass metrics.
+    """
+    # Obtain cluster assignments
     if isinstance(model, KMeans):
         y_pred_clusters = model.predict(X_test)
     else:
         y_pred_clusters = model.fit_predict(X_test)
 
-    # Clustering metrics
-    # KMeans exposes inertia_; DBSCAN doesn't → use NaN when unavailable
+    # Compute clustering-specific metrics
     if isinstance(model, KMeans):
         inertia_val = float(getattr(model, "inertia_", float("nan")))
     elif (
-        isinstance(model, Pipeline)
-        and "kmeans" in model.named_steps
-        and isinstance(model.named_steps["kmeans"], KMeans)
+            isinstance(model, Pipeline)
+            and "kmeans" in model.named_steps
+            and isinstance(model.named_steps["kmeans"], KMeans)
     ):
         inertia_val = float(getattr(model.named_steps["kmeans"], "inertia_", float("nan")))
     else:
         inertia_val = float("nan")
+
     clustering_metrics = {
         "silhouette": float(silhouette_score(X_test, y_pred_clusters)),
         "calinski_harabasz": float(calinski_harabasz_score(X_test, y_pred_clusters)),
@@ -82,7 +91,7 @@ def evaluate_clustering(model, X_test, y_test):
         "inertia": inertia_val,
     }
 
-    # Majority vote mapping → class indices
+    # Majority vote → predicted class indices
     y_pred_class, mapping = kmeans_eval(model, X_test, y_test)
 
     precision_per_class, recall_per_class, f1_per_class, support_per_class = (
@@ -114,7 +123,8 @@ def evaluate_classifier(model, X_test, y_test):
     Evaluate supervised classifier with standard multiclass metrics.
     """
     y_pred = model.predict(X_test)
-    # AUC requires class probabilities; compute only if the model supports it
+
+    # Compute ROC-AUC only if the model supports probability predictions
     if hasattr(model, "predict_proba"):
         y_proba = model.predict_proba(X_test)
         roc_auc_ovr = roc_auc_score(y_test, y_proba, multi_class="ovr", average="macro")
@@ -142,22 +152,22 @@ def evaluate_classifier(model, X_test, y_test):
 
 
 def evaluate_models(
-    models: Dict[str, object], X_test, y_test, n_classes: int
+        models: Dict[str, object], X_test, y_test, n_classes: int
 ) -> Dict[str, Dict[str, object]]:
     """
-    Evaluate multiclass models and return comprehensive metrics
+    Evaluate multiple models and return their comprehensive metrics.
     """
     results: Dict[str, Dict[str, object]] = {}
 
     for name, model in models.items():
         print(f"Evaluating {name}...")
 
-        # Detect clustering vs. classifier path (metrics differ)
+        # Determine if model is clustering-based or supervised
         is_kmeans = isinstance(model, KMeans) or (
-            isinstance(model, Pipeline) and "kmeans" in getattr(model, "named_steps", {})
+                isinstance(model, Pipeline) and "kmeans" in getattr(model, "named_steps", {})
         )
         is_dbscan = isinstance(model, DBSCAN) or (
-            isinstance(model, Pipeline) and "dbscan" in getattr(model, "named_steps", {})
+                isinstance(model, Pipeline) and "dbscan" in getattr(model, "named_steps", {})
         )
 
         if is_kmeans or is_dbscan:
@@ -171,10 +181,10 @@ def evaluate_models(
 
 
 def calculate_label_metrics(
-    models: Dict[str, object], X_test, y_test, traffic_types: list
+        models: Dict[str, object], X_test, y_test, traffic_types: list
 ) -> Dict[str, Dict[str, float]]:
     """
-    Calculate Label metrics from Traffic Type predictions for all models
+    Calculate binary 'Label' metrics derived from multiclass 'Traffic Type' predictions.
     """
     traffic_type_to_label_map = {
         "Audio": 0,
@@ -190,35 +200,30 @@ def calculate_label_metrics(
     def to_label(name: str) -> int:
         return traffic_type_to_label_map.get(name, 0)  # Default to benign if unknown
 
-    # Calculate Label metrics for all models
-    all_label_metrics = {}
-    classes = traffic_types
-
-    # Get true labels once
-    y_true_names = [classes[i] for i in y_test]
+    # Compute true binary labels
+    y_true_names = [traffic_types[i] for i in y_test]
     y_true_label = [to_label(n) for n in y_true_names]
 
+    all_label_metrics = {}
+
     for model_name, model in models.items():
-        # Predict Traffic Type for this model
+        # Predict traffic type
         is_kmeans = isinstance(model, KMeans) or (
-            isinstance(model, Pipeline) and "kmeans" in getattr(model, "named_steps", {})
+                isinstance(model, Pipeline) and "kmeans" in getattr(model, "named_steps", {})
         )
         is_dbscan = isinstance(model, DBSCAN) or (
-            isinstance(model, Pipeline) and "dbscan" in getattr(model, "named_steps", {})
+                isinstance(model, Pipeline) and "dbscan" in getattr(model, "named_steps", {})
         )
+
         if is_kmeans or is_dbscan:
-            # Map clusters to class indices using majority vote (handles DBSCAN noise as well)
             y_pred_type, _ = kmeans_eval(model, X_test, y_test)
         else:
             y_pred_type = model.predict(X_test)
 
-        # Map indices -> names
-        y_pred_names = [classes[i] for i in y_pred_type]
-
-        # Convert to binary labels
+        y_pred_names = [traffic_types[i] for i in y_pred_type]
         y_pred_label = [to_label(n) for n in y_pred_names]
 
-        # Calculate metrics
+        # Compute binary metrics
         label_metrics = {
             "accuracy": float(accuracy_score(y_true_label, y_pred_label)),
             "precision": float(precision_score(y_true_label, y_pred_label, zero_division=0)),
@@ -233,63 +238,63 @@ def calculate_label_metrics(
 
 def print_results(results: Dict[str, Dict[str, object]], traffic_types: list):
     """
-    Print formatted multiclass evaluation results
+    Print formatted multiclass evaluation results.
     """
     print("\n" + "=" * 80)
     print("MULTICLASS THREAT CLASSIFICATION RESULTS")
     print("=" * 80)
 
     for model_name, metrics in results.items():
-        print(f"\n{model_name.upper()}:")
+        print(f"\n{model_name.upper()}: ")
         print("-" * 40)
 
         if "accuracy" in metrics:
-            print(f"Accuracy: {metrics['accuracy']:.4f}")
+            print(f"Accuracy: {metrics['accuracy']: .4f}")
 
         if "precision_weighted" in metrics:
-            print(f"Precision (Weighted): {metrics['precision_weighted']:.4f}")
+            print(f"Precision (Weighted): {metrics['precision_weighted']: .4f}")
 
         if "recall_weighted" in metrics:
-            print(f"Recall (Weighted): {metrics['recall_weighted']:.4f}")
+            print(f"Recall (Weighted): {metrics['recall_weighted']: .4f}")
 
         if "f1_weighted" in metrics:
-            print(f"F1-Score (Weighted): {metrics['f1_weighted']:.4f}")
+            print(f"F1-Score (Weighted): {metrics['f1_weighted']: .4f}")
 
         if "roc_auc_ovr" in metrics and not np.isnan(metrics["roc_auc_ovr"]):
-            print(f"ROC AUC (OvR): {metrics['roc_auc_ovr']:.4f}")
+            print(f"ROC AUC (OvR): {metrics['roc_auc_ovr']: .4f}")
 
-        # Clustering metrics for K-means
+        # Clustering metrics
         if "silhouette" in metrics:
-            print(f"Silhouette Score: {metrics['silhouette']:.4f}")
+            print(f"Silhouette Score: {metrics['silhouette']: .4f}")
         if "calinski_harabasz" in metrics:
-            print(f"Calinski-Harabasz Score: {metrics['calinski_harabasz']:.4f}")
+            print(f"Calinski-Harabasz Score: {metrics['calinski_harabasz']: .4f}")
         if "davies_bouldin" in metrics:
-            print(f"Davies-Bouldin Score: {metrics['davies_bouldin']:.4f}")
+            print(f"Davies-Bouldin Score: {metrics['davies_bouldin']: .4f}")
         if "inertia" in metrics:
-            print(f"Inertia: {metrics['inertia']:.4f}")
+            print(f"Inertia: {metrics['inertia']: .4f}")
 
-        # Per-class metrics if available
+        # Per-class metrics
         if "precision_per_class" in metrics:
-            print(f"\nPer-Class Metrics:")
+            print("\nPer-Class Metrics:")
             for i, traffic_type in enumerate(traffic_types):
                 if i < len(metrics["precision_per_class"]):
                     print(f"  {traffic_type}:")
-                    print(f"    Precision: {metrics['precision_per_class'][i]:.4f}")
-                    print(f"    Recall: {metrics['recall_per_class'][i]:.4f}")
-                    print(f"    F1-Score: {metrics['f1_per_class'][i]:.4f}")
+                    print(f"    Precision: {metrics['precision_per_class'][i]: .4f}")
+                    print(f"    Recall: {metrics['recall_per_class'][i]: .4f}")
+                    print(f"    F1-Score: {metrics['f1_per_class'][i]: .4f}")
                     print(f"    Support: {metrics['support_per_class'][i]}")
 
 
 def print_label_results(label_metrics: Dict[str, Dict[str, float]]):
     """
-    Print Label metrics results
+    Print binary Label metrics derived from multiclass predictions.
     """
     print("\nLabel Metrics (from Traffic Type):")
     print("=" * 60)
 
     for model_name, metrics in label_metrics.items():
-        print(f"\n{model_name.upper()}:")
-        print(f"\tAccuracy: {metrics['accuracy']:.4f}")
-        print(f"\tPrecision: {metrics['precision']:.4f}")
-        print(f"\tRecall: {metrics['recall']:.4f}")
-        print(f"\tF1-Score: {metrics['f1']:.4f}")
+        print(f"\n{model_name.upper()}: ")
+        print(f"\tAccuracy: {metrics['accuracy']: .4f}")
+        print(f"\tPrecision: {metrics['precision']: .4f}")
+        print(f"\tRecall: {metrics['recall']: .4f}")
+        print(f"\tF1-Score: {metrics['f1']: .4f}")

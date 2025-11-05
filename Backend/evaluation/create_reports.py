@@ -1,17 +1,16 @@
-"""Module for creating evaluation reports and visualizations."""
-
 import os
 from typing import Dict, List, Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.decomposition import PCA
 
+"""Module for creating evaluation reports and visualizations."""
+
 
 def results_to_dataframe(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
-    """Convert results dictionary to DataFrame."""
+    """Convert results dictionary to a pandas DataFrame."""
     rows = []
     for model_name, metrics in results.items():
         row = {"model": model_name}
@@ -21,9 +20,9 @@ def results_to_dataframe(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
 
 
 def save_results_csv(
-    results: Dict[str, Dict[str, float]], out_dir: str = None, filename: str = None
+        results: Dict[str, Dict[str, float]], out_dir: str = None, filename: str = None
 ) -> str:
-    """Save results to CSV file."""
+    """Save results to a CSV file and return its path."""
     df = results_to_dataframe(results)
     out_path = os.path.join(out_dir, filename)
     df.to_csv(out_path, index=False)
@@ -31,11 +30,11 @@ def save_results_csv(
 
 
 def plot_confusion_matrices(
-    results: Dict[str, Dict[str, float]],
-    out_dir: str = "evaluation_reports/multiclass",
-    class_labels: Optional[List[str]] = None,
+        results: Dict[str, Dict[str, float]],
+        out_dir: str = "evaluation_reports/multiclass",
+        class_labels: Optional[List[str]] = None,
 ) -> str:
-    """Plot confusion matrices for all models."""
+    """Plot confusion matrices for all models and save them as a combined image."""
     model_confusion_matrices = [
         (model_name, res["confusion_matrix"])
         for model_name, res in results.items()
@@ -43,13 +42,15 @@ def plot_confusion_matrices(
     ]
     if not model_confusion_matrices:
         raise ValueError("No confusion matrices available")
+
     cols = min(3, len(model_confusion_matrices))
     rows = (len(model_confusion_matrices) + cols - 1) // cols
     plt.figure(figsize=(5 * cols, 4 * rows))
 
     for idx, (model_name, confusion_matrix) in enumerate(model_confusion_matrices, start=1):
         ax = plt.subplot(rows, cols, idx)
-        # Determine if binary or multiclass
+
+        # Determine if binary or multiclass confusion matrix
         if hasattr(confusion_matrix, "shape") and confusion_matrix.shape == (2, 2):
             labels = ["False", "True"] if class_labels is None else class_labels[:2]
             sns.heatmap(
@@ -78,6 +79,7 @@ def plot_confusion_matrices(
                 yticklabels=labels,
                 ax=ax,
             )
+
         ax.set_title(model_name)
         ax.set_xlabel("Predicted")
         ax.set_ylabel("True")
@@ -90,12 +92,11 @@ def plot_confusion_matrices(
 
 
 def plot_multiclass_metrics(
-    results: Dict[str, Dict[str, float]], out_dir: str = "evaluation_reports/multiclass"
+        results: Dict[str, Dict[str, float]], out_dir: str = "evaluation_reports/multiclass"
 ) -> str:
-    """Create comprehensive multiclass metrics visualization."""
+    """Create and save bar plots comparing multiclass metrics across models."""
     results_df = results_to_dataframe(results)
 
-    # Define multiclass metrics to plot
     multiclass_metrics = [
         "accuracy",
         "precision_weighted",
@@ -104,7 +105,6 @@ def plot_multiclass_metrics(
         "roc_auc_ovr",
     ]
     available_metrics = [m for m in multiclass_metrics if m in results_df.columns]
-
     if not available_metrics:
         raise ValueError("No multiclass metrics available")
 
@@ -113,15 +113,14 @@ def plot_multiclass_metrics(
 
     for idx, metric in enumerate(available_metrics, start=1):
         ax = plt.subplot(rows, cols, idx)
-        plot_df = results_df[["model", metric]].copy()
-        plot_df = plot_df.sort_values(metric, ascending=False)
+        plot_df = results_df[["model", metric]].copy().sort_values(metric, ascending=False)
 
         bars = ax.bar(plot_df["model"], plot_df[metric])
-        ax.set_title(f'{metric.replace("_", " ").title()}')
+        ax.set_title(f"{metric.replace('_', ' ').title()}")
         ax.set_ylabel(metric.replace("_", " ").title())
         ax.set_xlabel("Model")
 
-        # Color bars based on performance
+        # Color bars by performance level
         for i, bar in enumerate(bars):
             value = plot_df[metric].iloc[i]
             if value >= 0.9:
@@ -131,11 +130,10 @@ def plot_multiclass_metrics(
             else:
                 bar.set_color("red")
 
-        # Add value annotations
+        # Add numerical annotations
         for i, v in enumerate(plot_df[metric].tolist()):
-            ax.text(i, v + 0.01, f"{v:.3f}", ha="center", va="bottom")
+            ax.text(i, v + 0.01, f"{v: .3f}", ha="center", va="bottom")
 
-        # Set ticks and labels properly
         ax.set_xticks(range(len(plot_df["model"])))
         ax.set_xticklabels(plot_df["model"], rotation=45, ha="right")
         ax.set_ylim(0, 1.1)
@@ -148,40 +146,27 @@ def plot_multiclass_metrics(
 
 
 def plot_per_class_metrics(
-    results: Dict[str, Dict[str, float]],
-    traffic_types: List[str],
-    out_dir: str = "evaluation_reports/multiclass",
+        results: Dict[str, Dict[str, float]],
+        traffic_types: List[str],
+        out_dir: str = "evaluation_reports/multiclass",
 ) -> List[str]:
-    """Plot per-class metrics for all models with per-class metrics."""
+    """Plot per-class Precision, Recall, and F1 metrics for each model."""
     paths = []
-
-    # Find all models with per-class metrics
-    models_with_per_class = []
-    for model_name, metrics in results.items():
-        if "precision_per_class" in metrics:
-            models_with_per_class.append(model_name)
-
+    models_with_per_class = [m for m, r in results.items() if "precision_per_class" in r]
     if not models_with_per_class:
         raise ValueError("No per-class metrics available")
 
-    # Create plots for each model
     for model_name in models_with_per_class:
         metrics_data = results[model_name]
-        precision_per_class = metrics_data["precision_per_class"]
-        recall_per_class = metrics_data["recall_per_class"]
-        f1_per_class = metrics_data["f1_per_class"]
-
-        # Create DataFrame for plotting
         df_per_class = pd.DataFrame(
             {
                 "Traffic_Type": traffic_types,
-                "Precision": precision_per_class,
-                "Recall": recall_per_class,
-                "F1_Score": f1_per_class,
+                "Precision": metrics_data["precision_per_class"],
+                "Recall": metrics_data["recall_per_class"],
+                "F1_Score": metrics_data["f1_per_class"],
             }
         )
 
-        # Melt for easier plotting
         df_melted = df_per_class.melt(
             id_vars=["Traffic_Type"],
             value_vars=["Precision", "Recall", "F1_Score"],
@@ -207,43 +192,40 @@ def plot_per_class_metrics(
 
 
 def export_reports(
-    results: Dict[str, Dict[str, float]],
-    traffic_types: List[str],
-    label_metrics: Dict[str, Dict[str, float]] = None,
-    models: Dict[str, object] = None,
-    x_data: np.ndarray = None,
-    y_true: np.ndarray = None,
-    clustering_out_dir: str = "evaluation_reports/clustering",
+        results: Dict[str, Dict[str, float]],
+        traffic_types: List[str],
+        label_metrics: Dict[str, Dict[str, float]] = None,
+        models: Dict[str, object] = None,
+        x_data: np.ndarray = None,
+        y_true: np.ndarray = None,
+        clustering_out_dir: str = "evaluation_reports/clustering",
 ) -> Dict[str, str]:
-    """Export all binary and multiclass reports and clustering visualizations."""
+    """Export all reports: metrics summaries, plots, and clustering visualizations."""
     paths = {}
     multiclass_out_dir = os.path.join("evaluation_reports", "multiclass")
     binary_label_out_dir = os.path.join("evaluation_reports", "binary_label")
 
-    # Save multiclass metrics summary CSV
+    # Save multiclass summary
     paths["Multiclass Summary CSV"] = save_results_csv(
         results, multiclass_out_dir, "multiclass_metrics_summary.csv"
     )
 
-    # Save label metrics if provided
+    # Save binary label metrics if available
     if label_metrics:
         paths["Label-from-type CSV"] = save_results_csv(
             label_metrics, binary_label_out_dir, "label_from_type_metrics.csv"
         )
 
-    # Create multiclass visualizations
+    # Generate visualizations
     paths["Multiclass Metrics Comparison"] = plot_multiclass_metrics(results, multiclass_out_dir)
-
-    paths["Confusion Matrices"] = plot_confusion_matrices(
-        results, multiclass_out_dir, traffic_types
-    )
+    paths["Confusion Matrices"] = plot_confusion_matrices(results, multiclass_out_dir, traffic_types)
 
     per_class_paths = plot_per_class_metrics(results, traffic_types, multiclass_out_dir)
     for i, path in enumerate(per_class_paths):
         model_name = path.split("_")[-1].replace(".png", "")
         paths[f"Per-Class Metrics ({model_name})"] = path
 
-    # Optionally include clustering plots if models and data are supplied
+    # Optionally include clustering visualizations
     if models is not None and x_data is not None and y_true is not None:
         clustering_paths = export_clustering_reports(
             models, x_data, y_true, traffic_types, out_dir=clustering_out_dir
@@ -254,32 +236,13 @@ def export_reports(
 
 
 def export_clustering_reports(
-    models: Dict[str, object],
-    x_data: np.ndarray,
-    y_true: np.ndarray,
-    traffic_types: List[str],
-    out_dir: str = "evaluation_reports/clustering",
+        models: Dict[str, object],
+        x_data: np.ndarray,
+        y_true: np.ndarray,
+        traffic_types: List[str],
+        out_dir: str = "evaluation_reports/clustering",
 ) -> Dict[str, str]:
-    """Generate clustering plots (PCA + heatmap) for supported clustering models.
-
-    Parameters
-    ----------
-    models : Dict[str, object]
-        Dictionary of trained models keyed by model name.
-    x_data : np.ndarray
-        Feature matrix to compute cluster assignments on.
-    y_true : np.ndarray
-        True class labels for the samples.
-    traffic_types : List[str]
-        Class label names.
-    out_dir : str
-        Output directory for plots.
-
-    Returns
-    -------
-    Dict[str, str]
-        Mapping of plot description to saved file paths.
-    """
+    """Generate PCA scatter and cluster-label heatmap plots for clustering models."""
     paths = {}
     for clustering_model in ["kmeans", "dbscan"]:
         if clustering_model in models:
@@ -289,11 +252,11 @@ def export_clustering_reports(
             else:
                 y_clusters = model.fit_predict(x_data)
 
-            # Generate PCA scatter plot
+            # PCA visualization of clusters
             pca_path = plot_clustering_pca_scatter(x_data, y_clusters, clustering_model, out_dir)
             paths[f"{clustering_model.upper()} PCA by Cluster"] = pca_path
 
-            # Generate cluster-label heatmap
+            # Cluster vs true label heatmap
             heatmap_path = plot_cluster_label_heatmap(
                 y_clusters, y_true, traffic_types, clustering_model, out_dir
             )
@@ -302,34 +265,15 @@ def export_clustering_reports(
 
 
 def plot_clustering_pca_scatter(
-    x_data: np.ndarray,
-    y_clusters: np.ndarray,
-    algorithm_name: str,
-    out_dir: str = "evaluation_reports/clustering",
+        x_data: np.ndarray,
+        y_clusters: np.ndarray,
+        algorithm_name: str,
+        out_dir: str = "evaluation_reports/clustering",
 ) -> str:
-    """Create a PCA scatter plot colored by cluster assignments.
-
-    Parameters
-    ----------
-    x_data : np.ndarray
-        Feature matrix used for evaluation.
-    y_clusters : np.ndarray
-        Cluster assignments for the samples.
-    algorithm_name : str
-        Name of the clustering algorithm.
-    out_dir : str
-        Directory to save plots.
-
-    Returns
-    -------
-    str
-        Path to the saved plot file.
-    """
-    # Reduce to 2D with PCA for visualization
+    """Create a PCA scatter plot colored by cluster assignments."""
     pca = PCA(n_components=2, random_state=42)
     features_2d = pca.fit_transform(x_data)
 
-    # Plot colored by cluster assignments
     plt.figure(figsize=(8, 6))
     scatter = plt.scatter(
         features_2d[:, 0], features_2d[:, 1], c=y_clusters, cmap="tab20", s=10, alpha=0.7
@@ -338,66 +282,39 @@ def plot_clustering_pca_scatter(
     plt.xlabel("PC1")
     plt.ylabel("PC2")
 
-    # Handle colorbar for different clustering algorithms
     unique_clusters = np.unique(y_clusters)
     if algorithm_name.lower() == "dbscan" and -1 in unique_clusters:
-        # DBSCAN has noise points (-1), use special colorbar
         cbar = plt.colorbar(scatter, boundaries=np.arange(len(unique_clusters) + 1) - 0.5)
         cbar.set_label("Cluster ID (Noise=-1)")
     else:
-        # Standard clustering (K-means, etc.)
         cbar = plt.colorbar(scatter, boundaries=np.arange(int(np.max(y_clusters)) + 2) - 0.5)
         cbar.set_label("Cluster ID")
 
-    cluster_path = os.path.join(out_dir, f"{algorithm_name}_pca_by_cluster.png")
+    out_path = os.path.join(out_dir, f"{algorithm_name}_pca_by_cluster.png")
     plt.tight_layout()
-    plt.savefig(cluster_path, dpi=150)
+    plt.savefig(out_path, dpi=150)
     plt.close()
-
-    return cluster_path
+    return out_path
 
 
 def plot_cluster_label_heatmap(
-    y_clusters: np.ndarray,
-    y_true: np.ndarray,
-    traffic_types: List[str],
-    algorithm_name: str,
-    out_dir: str = "evaluation_reports/clustering",
+        y_clusters: np.ndarray,
+        y_true: np.ndarray,
+        traffic_types: List[str],
+        algorithm_name: str,
+        out_dir: str = "evaluation_reports/clustering",
 ) -> str:
-    """Heatmap of cluster vs true label counts (contingency matrix).
-
-    Parameters
-    ----------
-    y_clusters : np.ndarray
-        Cluster assignments for the samples.
-    y_true : np.ndarray
-        True class indices for the samples.
-    traffic_types : List[str]
-        Class label names.
-    algorithm_name : str
-        Name of the clustering algorithm.
-    out_dir : str
-        Directory to save plots.
-
-    Returns
-    -------
-    str
-        Path to the saved plot file.
-    """
-    # Ensure integers
+    """Plot a heatmap comparing cluster assignments to true class labels."""
     y_clusters = np.asarray(y_clusters).astype(int)
     y_true = np.asarray(y_true).astype(int)
 
-    # Handle different clustering algorithms
     unique_clusters = np.unique(y_clusters)
     if algorithm_name.lower() == "dbscan" and -1 in unique_clusters:
-        # DBSCAN: include noise cluster (-1)
         n_clusters = len(unique_clusters)
         cluster_labels = [
             f"C{cluster_id}" if cluster_id != -1 else "Noise" for cluster_id in unique_clusters
         ]
     else:
-        # Standard clustering (K-means, etc.)
         n_clusters = int(np.max(y_clusters)) + 1
         cluster_labels = [f"C{cluster_id}" for cluster_id in range(n_clusters)]
 
@@ -424,6 +341,7 @@ def plot_cluster_label_heatmap(
     plt.xlabel("True Label")
     plt.ylabel("Cluster ID")
     plt.title(f"{algorithm_name.upper()} Cluster vs True Label Counts")
+
     out_path = os.path.join(out_dir, f"{algorithm_name}_cluster_label_heatmap.png")
     plt.tight_layout()
     plt.savefig(out_path, dpi=150)

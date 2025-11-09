@@ -1,8 +1,10 @@
+"""FastAPI application for network anomaly detection model inference."""
+
 import os
 import time
-import uvicorn
+
 from config import get_model_dir
-from fastapi import FastAPI, File, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,8 +18,6 @@ from services.prediction import (
 )
 from utils.model_io import list_models
 from validators.input import validate_input_values
-
-"""FastAPI application for network anomaly detection model inference."""
 
 
 app = FastAPI(title="Model Inference API", version="2.0.0")
@@ -34,6 +34,17 @@ app.add_middleware(
 )
 
 
+# EXCEPTION HANDLERS:
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with proper status codes."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail if isinstance(exc.detail, str) else str(exc.detail)},
+    )
+
+
+# Validation error handler for consistent error payloads
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
@@ -166,23 +177,15 @@ def get_model_architecture(model_name: str, top_k: int = 2):
     )
 
 
-@app.post(
-    "/compare-dataset",
-    response_model=DatasetCompareResponse,
-    tags=["Utilities"],
-)
-def compare_dataset_file(file: UploadFile = File(...)):
-    """
-    Compare an uploaded dataset with the training dataset (TII-SSRC-23).
-
-    :param file: Uploaded dataset file for comparison.
-    :return: DatasetCompareResponse summarizing similarity metrics.
-    """
+@app.post("/compare-dataset", response_model=DatasetCompareResponse, tags=["Utilities"])
+async def compare_dataset_file(file: UploadFile = File(...)):
+    """Compare a dataset file with the training dataset (TII-SSRC-23)."""
     return DatasetCompareResponse(**compare_dataset_service(file.file))
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     # Ensure model directory exists before running the API server
     os.makedirs(get_model_dir(), exist_ok=True)
-
     uvicorn.run("serve:app", host="0.0.0.0", port=8000, reload=True)

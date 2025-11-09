@@ -80,7 +80,7 @@ export default function PredictionPanel({ predictions }) {
             {predictions.predictions.map((p, i) => (
               <Chip
                 key={i}
-                label={`Sample ${i + 1}: ${getClassName(p)} (${p})`}
+                label={`Sample ${i + 1}: ${getClassName(p)}`}
                 color="primary"
                 variant="outlined"
               />

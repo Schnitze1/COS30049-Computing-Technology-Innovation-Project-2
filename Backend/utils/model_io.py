@@ -43,7 +43,7 @@ def load_model(name: str, out_dir: str = "cache/models") -> Any:
     model_path = os.path.join(out_dir, f"{name}.joblib")
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model '{name}' not found in {out_dir}")
-    
+
     try:
         return joblib.load(model_path)
     except (ValueError, AttributeError) as e:

@@ -217,8 +217,12 @@ def export_reports(
         )
 
     # Generate visualizations
-    paths["Multiclass Metrics Comparison"] = plot_multiclass_metrics(results, multiclass_out_dir)
-    paths["Confusion Matrices"] = plot_confusion_matrices(results, multiclass_out_dir, traffic_types)
+    paths["Multiclass Metrics Comparison"] = plot_multiclass_metrics(
+        results, multiclass_out_dir
+    )
+    paths["Confusion Matrices"] = plot_confusion_matrices(
+        results, multiclass_out_dir, traffic_types
+    )
 
     per_class_paths = plot_per_class_metrics(results, traffic_types, multiclass_out_dir)
     for i, path in enumerate(per_class_paths):

@@ -1,4 +1,4 @@
-"""Service for comparing an uploaded dataset against the reference training dataset (TII-SSRC-23)."""
+"""Service for comparing uploaded dataset against reference training dataset (TII-SSRC-23)."""
 
 import logging
 from pathlib import Path
@@ -21,7 +21,7 @@ def compare_dataset_service(file_obj: BinaryIO) -> dict:
         # Resolve reference dataset path relative to Backend directory
         base_dir = Path(__file__).resolve().parent.parent
         ref_path = base_dir / "data_preprocessing" / "input" / "data.csv"
-        
+
         # Load and normalize reference dataset columns
         df_ref = pd.read_csv(ref_path)
         df_ref.columns = [col.strip().lower() for col in df_ref.columns]
@@ -76,3 +76,4 @@ def compare_dataset_service(file_obj: BinaryIO) -> dict:
             status_code=500,
             detail=f"Dataset comparison failed: {str(e)}",
         )
+

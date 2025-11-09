@@ -79,7 +79,7 @@ const Testing = () => {
         Model Playground
       </Typography>
 
-      {/* Force side-by-side on desktop, stacked on mobile */}
+      {/* Force side-by-side on desktop and stacked on mobile */}
       <Box
         sx={{
           display: 'flex',
@@ -89,7 +89,7 @@ const Testing = () => {
           width: '100%',
         }}
       >
-        {/* Left: Configuration */}
+        {/* Configuration */}
         <Paper
           sx={{
             flex: 1,
@@ -128,7 +128,7 @@ const Testing = () => {
           </Button>
         </Paper>
 
-        {/* Right: Predicted Output */}
+        {/* Predicted Output */}
         <Paper
           sx={{
             flex: 1,

@@ -1,7 +1,7 @@
 /**
  * @file App.js
- * @description The root component of the application. It sets up the theme,
- * routing, and overall page layout.
+ * @description The root component of the application
+ * It sets up the theme,routing, and page layout
  */
 
 import React, { useState, useMemo } from 'react';
@@ -22,20 +22,20 @@ import DeepLearning from './pages/Deep_Learning';
 import Testing from './pages/Testing';
 
 /**
- * The main application component.
- * It manages the dark mode theme state and defines the application's routes.
+ * The main application component
+ * It manages the dark mode theme state and defines the application's routes
  */
 export default function App() {
   // State to manage the light/dark theme.
   const [darkMode, setDarkMode] = useState(false);
 
   /**
-   * Toggles the theme between light and dark mode.
+   * Toggles the theme between light and dark mode
    */
   const handleDarkModeToggle = () => setDarkMode((prevMode) => !prevMode);
 
   // The Material-UI theme is memoized to prevent it from being recalculated
-  // on every render, which is a performance best practice.
+  // on every render, which is a performance best practice
   const theme = useMemo(() => createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
@@ -48,10 +48,10 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      {/* CssBaseline provides a consistent baseline of styles across browsers. */}
+      {/* CssBaseline provides a consistent baseline of styles across browsers */}
       <CssBaseline />
       <Router>
-        {/* Main container for the entire application layout. */}
+        {/* Main container for the entire application layout */}
         <Box
           sx={{
             minHeight: '100vh',
@@ -62,7 +62,7 @@ export default function App() {
         >
           <TopBar darkMode={darkMode} />
 
-          {/* Main content area that grows to fill available space. */}
+          {/* Main content area that grows to fill available space */}
           <Box component="main" sx={{ flex: 1, mt: '80px' }}>
             <Routes>
               <Route path="/" element={<Home />} />

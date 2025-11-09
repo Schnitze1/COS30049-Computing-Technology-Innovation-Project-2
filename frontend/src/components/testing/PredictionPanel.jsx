@@ -1,7 +1,7 @@
 /**
  * @file PredictionPanel.jsx
  * @description A component to display the results of a model prediction,
- * including the predicted class, confidence score, and a detailed breakdown.
+ * including the predicted class, confidence score, and a detailed breakdown
  */
 
 import React from 'react';
@@ -26,7 +26,7 @@ const getClassName = (index) => TRAFFIC_TYPES[index] || `Unknown (${index})`;
 const isBenign = (name) => ['Audio', 'Background', 'Text', 'Video'].includes(name);
 
 /**
- * Renders a panel displaying the output from a model prediction.
+ * Renders a panel displaying the output from a model prediction
  * It shows the primary prediction, confidence, and a detailed list of
  * probabilities for all classes
  *
@@ -69,7 +69,7 @@ export default function PredictionPanel({ predictions }) {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Detailed Prediction Breakdown */}
+      {/* Predictions */}
       <Grid container spacing={2}>
         {/* Column 1: List of all predictions (for multiple samples) */}
         <Grid size={{ xs: 6 }}>

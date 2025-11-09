@@ -33,7 +33,7 @@ def sample_vector_15() -> list[float]:
     :return:
         list[float]: A list of dummy numeric values within [0, 1] range.
     """
-    # Reasonable dummy feature values for test purposes
+    # Feature values for test purposes
     return [
         0.1, 0.2, 0.3, 0.4, 0.5,
         0.6, 0.7, 0.8, 0.9, 0.1,

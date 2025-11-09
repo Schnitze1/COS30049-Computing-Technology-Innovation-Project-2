@@ -1,14 +1,14 @@
 /**
  * @file DecisionFlowSnakey.jsx
  * @description A D3.js Sankey diagram component for React that visualizes the flow
- * from feature inputs, through a model, to classification probabilities.
+ * from feature inputs, through a model, to classification probabilities
  */
 
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 
-// Chart's native aspect ratio and layout. D3 will always draw to this size.
+// Charts native aspect ratio and layout
 const SVG_WIDTH = 900;
 const SVG_HEIGHT = 500;
 
@@ -28,9 +28,9 @@ export default function DecisionFlowSnakey({
       return;
     }
 
-    // SECTION: SVG and Tooltip Setup
+    // SVG and Tooltip Setup
     const svg = d3.select(svgRef.current)
-      // Use viewBox for responsive scaling.
+      // Use viewBox for responsive scaling
       .attr("viewBox", `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`)
       .html(""); // Clear previous renders
 
@@ -43,8 +43,6 @@ export default function DecisionFlowSnakey({
         .style("color", "#fff").style("font-size", "14px");
     }
     const tooltip = tooltipRef.current;
-
-    // ... (The rest of the D3 drawing logic remains the same)
     const validFeatures = featureImportances.filter((d) => d && d.name);
     const validClasses = classLabels.filter(Boolean);
     const graph = {

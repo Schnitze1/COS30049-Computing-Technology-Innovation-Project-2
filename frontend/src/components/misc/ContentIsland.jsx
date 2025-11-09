@@ -49,7 +49,7 @@ export default function ContentIsland() {
         transition: "all 0.4s ease",
       }}
     >
-      {/* Left side: Title and description */}
+      {/* Title and description */}
       <Box sx={{ flex: 1 }}>
         <Typography
           variant="h4"
@@ -78,7 +78,7 @@ export default function ContentIsland() {
         </Typography>
       </Box>
 
-      {/* Right side: List of quick start links */}
+      {/* List of quick start links */}
       <Box
         sx={{
           flex: 1,
@@ -125,7 +125,7 @@ export default function ContentIsland() {
                 <ArrowForwardIcon className="arrow-icon" sx={{ fontSize: 22 }} />
               </Box>
             </Link>
-            {/* Add a divider between links */}
+            {/* Divider between links */}
             {index < QUICK_START_LINKS.length - 1 && (
               <Divider
                 sx={{

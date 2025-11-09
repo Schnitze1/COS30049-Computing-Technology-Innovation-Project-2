@@ -37,8 +37,8 @@ const CONTROLLED_FEATURES = [
 
 const MODEL_FEATURE_COUNT = 15;
 const PRESETS = {
-  Normal: [0.2, 0.2, 0.2, 0.2, 0.2],
-  Malicious: [1.0, 0.8, 1.0, 0.7, 0.8],
+  Malicious: [0.2, 0.2, 0.2, 0.2, 0.2],
+  Normal: [1.0, 0.8, 1.0, 0.7, 0.8],
 };
 
 export default function SupervisedHero() {

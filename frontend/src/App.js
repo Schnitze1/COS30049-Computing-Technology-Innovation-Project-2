@@ -12,6 +12,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TopBar from './components/misc/TopBar';
 import Footer from './components/misc/Footer';
 import FloatingDarkModeButton from './components/misc/FloatingDarkModeButton';
+import ErrorBoundary from './components/misc/ErrorBoundary';
 
 // Import page components
 import Home from './pages/Home';
@@ -20,6 +21,7 @@ import Supervised from './pages/Supervised';
 import Unsupervised from './pages/Unsupervised';
 import DeepLearning from './pages/Deep_Learning';
 import Testing from './pages/Testing';
+import NotFound from './pages/NotFound';
 
 /**
  * The main application component.
@@ -50,34 +52,38 @@ export default function App() {
     <ThemeProvider theme={theme}>
       {/* CssBaseline provides a consistent baseline of styles across browsers. */}
       <CssBaseline />
-      <Router>
-        {/* Main container for the entire application layout. */}
-        <Box
-          sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: 'background.default',
-          }}
-        >
-          <TopBar darkMode={darkMode} />
+      <ErrorBoundary>
+        <Router>
+          {/* Main container for the entire application layout. */}
+          <Box
+            sx={{
+              minHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'background.default',
+            }}
+          >
+            <TopBar darkMode={darkMode} />
 
-          {/* Main content area that grows to fill available space. */}
-          <Box component="main" sx={{ flex: 1, mt: '80px' }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/testing" element={<Testing />} />
-              <Route path="/testing/supervised" element={<Supervised />} />
-              <Route path="/testing/unsupervised" element={<Unsupervised />} />
-              <Route path="/testing/deep-learning" element={<DeepLearning />} />
-            </Routes>
+            {/* Main content area that grows to fill available space. */}
+            <Box component="main" sx={{ flex: 1, mt: '80px' }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/testing" element={<Testing />} />
+                <Route path="/testing/supervised" element={<Supervised />} />
+                <Route path="/testing/unsupervised" element={<Unsupervised />} />
+                <Route path="/testing/deep-learning" element={<DeepLearning />} />
+                {/* Catch-all route for 404 Not Found */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Box>
+
+            <Footer />
+            <FloatingDarkModeButton toggleDarkMode={handleDarkModeToggle} />
           </Box>
-
-          <Footer />
-          <FloatingDarkModeButton toggleDarkMode={handleDarkModeToggle} />
-        </Box>
-      </Router>
+        </Router>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

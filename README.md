@@ -18,11 +18,12 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # Start API server
-uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
 ```
+
 - Backend SwaggerUI: `http://127.0.0.1:8000/docs`.
 
-- Optional backend data preprocessing & models training:
+**Optional backend data preprocessing & models training:**
 ```bash
 # (Optional): Preprocess data (creates processed_data.npz and feature_metadata.pkl)
 python data_preprocessing\data_cleaning.py
@@ -32,7 +33,7 @@ python main.py
 ```
 
 ### Frontend
-
+Open another terminal:
 ```bash
 cd frontend
 npm install
@@ -40,6 +41,25 @@ npm start
 ```
 Front end URL: `http://127.0.0.1:3000`.
 The frontend expects the backend at `http://127.0.0.1:8000`.
+
+
+## Quick run
+### Backend
+
+```bash
+cd Backend
+.\.venv\Scripts\activate
+# Start API server
+python -m uvicorn serve:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm start
+```
+
 
 ### Testing
 
@@ -54,7 +74,7 @@ pytest -q
 - **API Tests**: All endpoints with TestClient (`test_api.py`)
 - **Integration Tests**: End-to-end prediction workflow
 - **Error Handling**: 422, 404, 400, 500 status codes
-- **Data Validation**: Non-negative inputs, 15-feature requirement
+- **Data Validation**: Non-negative inputs, 15-feature requirement, empty values auto-converted to 0
 
 **Test Files:**
 - `tests/conftest.py` - Pytest configuration and fixtures
@@ -130,6 +150,7 @@ The FastAPI backend provides 5 RESTful endpoints:
 - `404 Not Found`: `{"message": "Model '{model_name}' not found"}`
 - `422 Unprocessable Entity`: `{"message": "Validation error", "errors": [...]}` (e.g., wrong number of features, non-numeric input, negative values)
 - `400 Bad Request`: `{"message": "Error during data preprocessing: ..."}`
+- `500 Internal Server Error`: `{"message": "Model was saved with a different numpy version. Please retrain the models by running: python main.py"}` (version compatibility issue)
 
 #### 4. `GET /model-architecture/{model_name}`
 **Description**: Retrieves the architecture details of a neural network model.
@@ -226,10 +247,10 @@ graph TB
 ```
 
 **Components:**
-- **Frontend (React, `frontend/`)**: Web App for exploration, model selection, and visualisation (probabilities, confusion matrices, clustering views). Talks to the backend via REST.
-- **Backend (Python/FastAPI, `Backend/`)**: Data preprocessing, training, model registry, and prediction API. Trained artefacts cached in `Backend/cache/models` and loaded at serve time.
+- **Frontend (React, `frontend/`)**: Web App for exploration, model selection, and visualisation (probabilities, confusion matrices, clustering views). Features real-time input validation, automatic empty-to-zero conversion, and comprehensive error handling. Talks to the backend via REST.
+- **Backend (Python/FastAPI, `Backend/`)**: Data preprocessing, training, model registry, and prediction API. Trained artefacts cached in `Backend/cache/models` and loaded at serve time. Includes robust error handling and input validation.
 - **Data pipeline (`Backend/data_preprocessing/`)**: Cleans https://ieeexplore.ieee.org/document/10262330 dataset, engineers features, balances classes, and persists `processed_data.npz` plus `feature_metadata.pkl`.
-- **Serving (`Backend/serve.py`)**: Exposes endpoints (e.g., `/predict`) that the frontend calls during interactive testing.
+- **Serving (`Backend/serve.py`)**: Exposes endpoints (e.g., `/predict`) that the frontend calls during interactive testing. Includes CORS middleware for cross-origin requests and comprehensive exception handling.
 
 ## Code Structure
 
@@ -306,6 +327,38 @@ Backend/
 │   └── test_api.py            # API integration tests
 └── README.md                  # Backend documentation
 ```
+
+## Input Validation & Error Handling
+
+### Frontend Validation
+- **Real-time Validation**: Input fields are validated as users type
+- **Negative Value Prevention**: Negative values are automatically prevented and converted to 0 on blur
+- **Empty Value Handling**: Empty/null/undefined values are automatically converted to 0
+- **Visual Feedback**: Validation errors are displayed in the Configuration section
+- **Predict Button**: Automatically disabled when inputs are invalid
+
+### Backend Validation
+- **Feature Count**: Exactly 15 features required per prediction
+- **Non-negative Values**: All feature values must be ≥ 0
+- **Numeric Validation**: All values must be valid numbers (not NaN/Infinity)
+- **Error Responses**: Clear error messages with appropriate HTTP status codes (422, 404, 400, 500)
+
+### Model Compatibility
+- **Version Mismatch Handling**: If models were saved with different numpy/scikit-learn versions, clear error messages guide users to retrain
+- **Model Loading**: Improved error handling for model loading with helpful error messages
+
+## Troubleshooting
+
+### Model Loading Errors
+If you encounter errors like `ValueError: <class 'numpy.random._mt19937.MT19937'> is not a known BitGenerator module`:
+1. This indicates models were saved with a different numpy version
+2. Solution: Retrain the models with `python main.py` in the Backend directory
+
+### CORS Issues
+- The backend is configured to allow all origins in development
+- For production, set the `CORS_ORIGINS` environment variable with comma-separated origins
+- Example: `CORS_ORIGINS=http://localhost:3000,https://yourdomain.com`
+
 
 ## Part 1: Backend development:
 Details: `https://github.com/Schnitze1/COS30049-Computing-Technology-Innovation-Project`

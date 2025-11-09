@@ -37,11 +37,22 @@ def load_model(name: str, out_dir: str = "cache/models") -> Any:
         Loaded model object.
     :raises FileNotFoundError:
         Raised if the specified model file does not exist.
+    :raises ValueError:
+        Raised if there's a version compatibility issue loading the model.
     """
     model_path = os.path.join(out_dir, f"{name}.joblib")
-    if os.path.exists(model_path):
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model '{name}' not found in {out_dir}")
+    
+    try:
         return joblib.load(model_path)
-    raise FileNotFoundError(f"Model '{name}' not found in {out_dir}")
+    except (ValueError, AttributeError) as e:
+        if "BitGenerator" in str(e) or "numpy.random" in str(e):
+            raise ValueError(
+                f"Model '{name}' was saved with a different numpy version. "
+                f"Please retrain the models by running: python main.py"
+            ) from e
+        raise
 
 
 def load_models(out_dir: str = "cache/models") -> Dict[str, Any]:

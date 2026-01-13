@@ -6,6 +6,8 @@ Detect unusual or potentially malicious network activity by distinguishing norma
 
 Live site: [auris-network-anomaly-detection-ai.vercel.app](https://auris-network-anomaly-detection-ai.vercel.app/)
 
+## Part 1: Backend development:
+Details: `https://github.com/Schnitze1/COS30049-Computing-Technology-Innovation-Project`
 
 ## Quick Start
 
@@ -360,5 +362,3 @@ If you encounter errors like `ValueError: <class 'numpy.random._mt19937.MT19937'
 - Example: `CORS_ORIGINS=http://localhost:3000,https://yourdomain.com`
 
 
-## Part 1: Backend development:
-Details: `https://github.com/Schnitze1/COS30049-Computing-Technology-Innovation-Project`
